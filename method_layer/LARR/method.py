@@ -3,24 +3,23 @@ import pandas as pd
 import numpy as np
 from typing import Any, Dict, Dict, Optional, Tuple
 from lime.lime_tabular import LimeTabularExplainer
-from sklearn.linear_model import LogisticRegression
 import yaml
 from data_layer.data_object import DataObject
 from evaluation_layer.utils import check_counterfactuals
-from method_layer.ROAR.library.method_utils import roar_recourse
+from method_layer.LARR.library.method_utils import larr_recourse
 from method_layer.method_factory import register_method
 from method_layer.method_object import MethodObject
 from model_layer.model_object import ModelObject
-from config_utils import deep_merge, reconstruct_encoding_constraints
+from config_utils import deep_merge
 import logging
 
 
-@register_method("ROAR")
-class ROAR(MethodObject):
+@register_method("LARR")
+class LARR(MethodObject):
     """
-    Implementation of ROAR [1]_.
+    Implementation of LARR [1]_.
 
-    .. [1] Upadhyay, S., Joshi, S., & Lakkaraju, H. (2021). Towards Robust and Reliable Algorithmic Recourse. NeurIPS.
+    .. [1] Kayastha, K., Gkatzelis, V., Jabbari, S. (2025). Learning-Augmented Robust Algorithmic Recourse. Drexel University. (https://arxiv.org/pdf/2410.01580)
     """
 
     def __init__(self, data: DataObject, 
@@ -31,7 +30,7 @@ class ROAR(MethodObject):
         super().__init__(data, model, config_override=config_override)
 
         # get configs from config file
-        self.config = yaml.safe_load(open("method_layer/ROAR/library/method_config.yml", 'r'))
+        self.config = yaml.safe_load(open("method_layer/LARR/library/method_config.yml", 'r'))
         
         # merge configs with user specified, if they exist
         if self._config_override is not None:
@@ -41,20 +40,10 @@ class ROAR(MethodObject):
         self._feature_order = self._data.get_feature_names(expanded=True) # ensure the feature ordering is correct for the model input
         
         self._feature_cost = self.config['feature_cost']
-        self._lr = self.config['lr']
-        self._lambda_ = self.config['lambda_']
-        self._delta_max = self.config['delta_max']
-        self._norm = self.config['norm']
-        self._t_max_min = self.config['t_max_min']
+        self._alpha = self.config['alpha']
+        self._beta = self.config['beta']
         self._loss_type = self.config['loss_type']
-        self._y_target = self.config['y_target']
-        self._binary_cat_features = self.config['binary_cat_features']
-        self._loss_threshold = float(self.config['loss_threshold'])
-        self._discretize = self.config['discretize']
-        self._sample = self.config['sample']
         self._lime_seed = self.config['lime_seed']
-        self._enforce_encoding = self.config['enforce_encoding']
-        self._seed = self.config['seed']
 
         self._coeffs = coeffs
         self._intercepts = intercepts
@@ -68,16 +57,10 @@ class ROAR(MethodObject):
 
         encoded_feature_names = self._data.get_categorical_features(expanded=True)
 
-        # cat_features_indeces should be a 2d array so that each row corresponds to the indices of the one-hot encoded features for a particular categorical variable.
         cat_features_indices = []
         for features in encoded_feature_names:
-            # Find the indices of these encoded features in the processed dataframe
             indices = [factuals.columns.get_loc(feat) for feat in features]
             cat_features_indices.extend(indices)
-
-        # So cat_features_indices should look something like [[3,4,5,6]] for the german dataset, 
-        # which means the 4 one-hot encoded features of "personal_status_sex" are at those positions 
-        # in the encoded dataset. 
 
         coeffs = self._coeffs
         intercepts = self._intercepts
@@ -111,12 +94,14 @@ class ROAR(MethodObject):
                 axis=1
             )
 
+        
+        
         cfs = []
         for index, row in factuals.iterrows():
             coeff = coeffs[index]
             intercept = intercepts[index]
 
-            counterfactual = roar_recourse(
+            counterfactual = larr_recourse(
                 row.to_numpy(), #.reshape((1, -1)),
                 coeff,
                 intercept,
@@ -139,15 +124,13 @@ class ROAR(MethodObject):
         # Convert output into correct format
         cfs = np.array(cfs)
         df_cfs = pd.DataFrame(cfs, columns=self._data.get_feature_names(expanded=True)) # ensure the feature ordering is correct for the model input
-        # TODO: Check counterfactual should be implemented soon.
         df_cfs = check_counterfactuals(self._model, self._data, df_cfs, factuals.index) 
-        # df_cfs = self._model.get_ordered_features(df_cfs)
 
         return df_cfs
 
     def _get_lime_coefficients(self, factuals: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
         """
-        ROAR Recourse is only defined on linear models. To make it work for arbitrary non-linear networks
+        LARR Recourse is only defined on linear models. To make it work for arbitrary non-linear networks
         we need to find the lime coefficients for every instance.
         """
         np.random.seed(self._lime_seed)
@@ -160,12 +143,9 @@ class ROAR(MethodObject):
         lime_exp = LimeTabularExplainer(
             training_data = lime_data,
             training_labels = lime_label,
-            feature_names = self._data.get_feature_names(expanded=True), # ensure the feature ordering is correct for lime explainer
-            discretize_continuous = self._discretize,
-            sample_around_instance = self._sample,
-            categorical_names = self._data.get_categorical_features(expanded=True), 
-            # self._data.encoded_normalized's categorical features contain feature name and value, separated by '_'
-            # while self._data.categorical do not contain those additional values.
+            mode="regression",
+            discretize_continuous=False,
+            feature_selection="none",
         )
 
         for index, row in factuals.iterrows():

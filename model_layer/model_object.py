@@ -51,6 +51,7 @@ class ModelObject:
         
         self._model.fit(X_train, y_train)
 
+
     def _instantiate_model(self) -> None:
         """
         Maps the requested architecture and backend from the YAML config to the 
@@ -84,8 +85,10 @@ class ModelObject:
     def get_train_data(self):
         return self._x_train, self._y_train
     
+
     def get_test_data(self):
         return self._x_test, self._y_test
+
 
     def get_train_accuracy(self) -> float:
         """
@@ -105,6 +108,7 @@ class ModelObject:
         accuracy = np.mean(predictions == np.asarray(self._y_train))
         return accuracy
 
+
     def get_test_accuracy(self) -> float:
         """
         Evaluates the model's accuracy on the test set that was set during initialization.
@@ -122,6 +126,7 @@ class ModelObject:
         predictions = self.predict(self._x_test)
         accuracy = np.mean(predictions == np.asarray(self._y_test))
         return accuracy
+
 
     def predict(self, x: Union[np.ndarray, pd.DataFrame, torch.Tensor]) -> Union[np.ndarray, torch.Tensor]:
         """
@@ -148,6 +153,27 @@ class ModelObject:
             # If softmax is used, return the class with the highest probability
             return np.argmax(predictions.cpu().numpy(), axis=1)
         
+    
+    def predict_both_classes(self, x: Union[np.ndarray, pd.DataFrame, torch.Tensor]) -> Union[np.ndarray, torch.Tensor]:
+        """
+        Returns the predicted classes for both classes, returns both classes in a numpy array.
+        """
+        if isinstance(x, pd.DataFrame):
+            feature_names = self._data_object.get_feature_names(expanded=True)
+            x = x[feature_names].values # reorder columns to match the expected feature order
+        
+        x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+        predictions = self._model.predict(x_tensor)
+        if self._config.get('output_activation') == 'sigmoid':
+            # if sigmoid, we need to return both the labels for the classes, which is just the predicted label and its complement (1 - predicted label)
+            predicted_labels = (predictions > 0.5).float().cpu().numpy().squeeze() # shape (n_samples,)
+            return np.vstack([1 - predicted_labels, predicted_labels]).T # shape (n_samples, 2) with columns [class_0, class_1]
+        elif self._config.get('output_activation') == 'softmax':
+            # If softmax is used, the output is already in the form of class probabilities, but we want predicted labels.
+            # so we round the probabilities to get the predicted class labels, and then convert back to one-hot encoding format.
+            predicted_labels = np.argmax(predictions.cpu().numpy(), axis=1)
+            return np.eye(predictions.shape[1])[predicted_labels] # convert to one-hot encoding format
+            
 
     def predict_proba(self, x: Union[np.ndarray, pd.DataFrame, torch.Tensor]) -> Union[np.ndarray, torch.Tensor]:
         """

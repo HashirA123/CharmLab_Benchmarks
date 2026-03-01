@@ -128,6 +128,9 @@ def roar_recourse(
 
     coeff = torch.from_numpy(coeff).float().to(device)
     intercept = torch.from_numpy(np.asarray([intercept])).float().to(device)
+
+    print(f"This is the value of coeff {coeff} and intercept {intercept}")
+
     x = torch.from_numpy(x).float().to(device)
     y_target = torch.tensor(y_target).float().to(device)
     
@@ -211,4 +214,5 @@ def roar_recourse(
             logging.info("Timeout - ROAR didn't converge")
             break
 
+    x_new = reconstruct_encoding_constraints(x_new, cat_feature_indices)
     return x_new.cpu().detach().numpy() #.squeeze(axis=0)
