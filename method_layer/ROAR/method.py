@@ -73,7 +73,7 @@ class ROAR(MethodObject):
         for features in encoded_feature_names:
             # Find the indices of these encoded features in the processed dataframe
             indices = [factuals.columns.get_loc(feat) for feat in features]
-            cat_features_indices.append(indices)
+            cat_features_indices.extend(indices)
 
         # So cat_features_indices should look something like [[3,4,5,6]] for the german dataset, 
         # which means the 4 one-hot encoded features of "personal_status_sex" are at those positions 

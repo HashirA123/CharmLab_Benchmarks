@@ -1,6 +1,8 @@
+import numpy as np
+import torch
 import yaml
 import copy
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 import logging
 
 logger = logging.getLogger(__name__)
@@ -48,3 +50,23 @@ def resolve_layer_config(base_config_path: str, overrides: Optional[Dict[str, An
         logger.info(f"Applied {len(overrides)} override(s) to {base_config_path}")
         return merged
     return base_config
+
+
+def reconstruct_encoding_constraints(instance: torch.Tensor, cat_features_indices: List[int]) -> torch.Tensor:
+    """
+    For a given instance, ensure that the one-hot encoded categorical features 
+    are valid.
+    
+    Args:
+        instance: The input instance as a torch tensor.
+        cat_features_indices: A list indicating the indices of the one-hot encoded categorical features.
+    
+    Returns:
+        The instance with reconstructed encoding constraints.
+    """
+    x_reconstructed = instance.clone()
+
+    for index in cat_features_indices:
+        x_reconstructed[index] = torch.clamp(torch.round(x_reconstructed[index]), 0, 1)
+    
+    return x_reconstructed

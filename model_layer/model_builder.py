@@ -47,7 +47,7 @@ class PyTorchNeuralNetwork(torch.nn.Module):
         layers = []
         input_size = params['n_inputs']
         for layer_config in params['layers']:
-            output_size = layer_config[1]
+            output_size = layer_config[0]
             layers.append(nn.Linear(input_size, output_size))
             layers.append(nn.ReLU())  # Using ReLU activation for hidden layers
             input_size = output_size
