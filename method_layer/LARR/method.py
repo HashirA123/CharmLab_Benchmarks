@@ -3,10 +3,11 @@ import pandas as pd
 import numpy as np
 from typing import Any, Dict, Dict, Optional, Tuple
 from lime.lime_tabular import LimeTabularExplainer
+from sklearn.linear_model import LogisticRegression
 import yaml
 from data_layer.data_object import DataObject
 from evaluation_layer.utils import check_counterfactuals
-from method_layer.LARR.library.method_utils import larr_recourse
+from method_layer.LARR.library.method_utils import LARRecourse
 from method_layer.method_factory import register_method
 from method_layer.method_object import MethodObject
 from model_layer.model_object import ModelObject
@@ -47,6 +48,33 @@ class LARR(MethodObject):
 
         self._coeffs = coeffs
         self._intercepts = intercepts
+
+        self._method = LARRecourse(
+            weights=self._coeffs,
+            bias=self._intercepts,
+            alpha=self._alpha,
+        )
+
+        # search for optimal lamda during initialization, so that we don't have to do it for every instance during counterfactual generation
+
+        X_train, _ = self._model.get_train_data()
+
+        predictions = self._model.predict(X_train)
+
+        recourse_needed = X_train.iloc[
+            np.where(predictions == 0)
+        ]
+
+        if len(recourse_needed) == 0:
+            raise ValueError("No recourse needed for any instance in the training data. Please check your model and data.")
+        
+        self._method.choose_lambda(
+            recourse_needed_X=recourse_needed.to_numpy(),
+            predict_fn=self._model.predict,
+            X_train=X_train.to_numpy(),
+            predict_proba_fn=self._model.predict_proba,
+            predict_label_fn=self._model.predict_both_classes
+        )
 
     def get_counterfactuals(self, factuals: pd.DataFrame):
         """
@@ -93,31 +121,18 @@ class LARR(MethodObject):
             intercepts = np.vstack([self._intercepts] * factuals.shape[0]).squeeze(
                 axis=1
             )
-
-        
         
         cfs = []
         for index, row in factuals.iterrows():
             coeff = coeffs[index]
             intercept = intercepts[index]
 
-            counterfactual = larr_recourse(
-                row.to_numpy(), #.reshape((1, -1)),
+            counterfactual = self._method.larr_recourse( # special case here, just to try and keep consistent with original code.
+                row.to_numpy().reshape((1, -1)),
                 coeff,
                 intercept,
-                cat_features_indices,
-                # binary_cat_features=self._binary_cat_features,
-                feature_costs=self._feature_cost,
-                lr=self._lr,
-                lambda_param=self._lambda_,
-                delta_max=self._delta_max,
-                y_target=self._y_target,
-                norm=self._norm,
-                t_max_min=self._t_max_min,
-                loss_type=self._loss_type,
-                loss_threshold=self._loss_threshold,
-                enforce_encoding=self._enforce_encoding,
-                seed=self._seed,
+                beta=self._beta,
+                cat_features_indices=cat_features_indices,
             )
             cfs.append(counterfactual)
 
@@ -142,22 +157,24 @@ class LARR(MethodObject):
 
         lime_exp = LimeTabularExplainer(
             training_data = lime_data,
-            training_labels = lime_label,
-            mode="regression",
-            discretize_continuous=False,
-            feature_selection="none",
+            discretize_continuous = False,
+            feature_selection="none", 
+            # self._data.encoded_normalized's categorical features contain feature name and value, separated by '_'
+            # while self._data.categorical do not contain those additional values.
         )
 
         for index, row in factuals.iterrows():
             factual = row.values
+            # print(f"These are the predicted values for the factual instance before passing to lime {self._model.predict_proba(factual)}")
             explanations = lime_exp.explain_instance(
                 factual,
-                self._model.predict_proba,
+                self._model.predict_both_classes, # little misleading from the original, but these predictions have to be labels like [0,1] for positive and [1, 0] for negative.
                 num_features=len(self._data.get_feature_names(expanded=True)),
+                model_regressor=LogisticRegression() 
             )
             intercepts.append(explanations.intercept[1])
+            coefficients = explanations.local_exp[1][0][1]
+            coeffs[index] = coefficients
 
-            for tpl in explanations.local_exp[1]:
-                coeffs[index][tpl[0]] = tpl[1]
 
         return coeffs, np.array(intercepts)

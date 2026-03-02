@@ -14,6 +14,7 @@ from model_layer.model_object import ModelObject
 from config_utils import deep_merge, reconstruct_encoding_constraints
 import logging
 
+#NOTE: THIS METHOD IS NOT WORKING RIGHT NOW, ISSUE LIKELY STEMS FROM LIME, REEDS FIXING.
 
 @register_method("ROAR")
 class ROAR(MethodObject):
@@ -117,7 +118,7 @@ class ROAR(MethodObject):
             intercept = intercepts[index]
 
             counterfactual = roar_recourse(
-                row.to_numpy(), #.reshape((1, -1)),
+                row.to_numpy().reshape((1, -1)),
                 coeff,
                 intercept,
                 cat_features_indices,
@@ -159,25 +160,30 @@ class ROAR(MethodObject):
 
         lime_exp = LimeTabularExplainer(
             training_data = lime_data,
-            training_labels = lime_label,
-            feature_names = self._data.get_feature_names(expanded=True), # ensure the feature ordering is correct for lime explainer
-            discretize_continuous = self._discretize,
-            sample_around_instance = self._sample,
-            categorical_names = self._data.get_categorical_features(expanded=True), 
+            # training_labels = lime_label,
+            # feature_names = self._data.get_feature_names(expanded=True), # ensure the feature ordering is correct for lime explainer
+            discretize_continuous = False,
+            # sample_around_instance = self._sample,
+            # categorical_names = self._data.get_categorical_features(expanded=True),
+            feature_selection="none", 
             # self._data.encoded_normalized's categorical features contain feature name and value, separated by '_'
             # while self._data.categorical do not contain those additional values.
         )
 
         for index, row in factuals.iterrows():
             factual = row.values
+            # print(f"These are the predicted values for the factual instance before passing to lime {self._model.predict_proba(factual)}")
             explanations = lime_exp.explain_instance(
                 factual,
-                self._model.predict_proba,
+                self._model.predict_both_classes, # little misleading from the original, but these predictions have to be labels like [0,1] for positive and [1, 0] for negative.
                 num_features=len(self._data.get_feature_names(expanded=True)),
+                model_regressor=LogisticRegression() 
             )
             intercepts.append(explanations.intercept[1])
+            coefficients = explanations.local_exp[1][0][1]
+            coeffs[index] = coefficients
 
-            for tpl in explanations.local_exp[1]:
-                coeffs[index][tpl[0]] = tpl[1]
+            #for tpl in explanations.local_exp[1]:
+            #    coeffs[index][tpl[0]] = tpl[1]
 
         return coeffs, np.array(intercepts)

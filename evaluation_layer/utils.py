@@ -30,6 +30,7 @@ def check_counterfactuals(model: ModelObject,
     pd.DataFrame
         The valid counterfactuals that are classified as the target class by the model.
     """
+    print(f"These are the predicted values for the counterfactual instances before checking {model.predict_proba(counterfactuals)}")
     counterfactuals[data._config["target_column"]] = np.argmax(model.predict_proba(counterfactuals), axis=1)
     # Change all wrong counterfactuals to nan
     counterfactuals.loc[counterfactuals[data._config["target_column"]] != 1, :] = np.nan

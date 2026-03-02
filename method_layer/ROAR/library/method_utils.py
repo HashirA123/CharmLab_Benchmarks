@@ -37,7 +37,8 @@ def _calc_max_perturbation(
     -------
     Tuple of Torch tensors with optimal perturbations of coefficients and intercept
     """
-    W = torch.cat((coeff, intercept), 0)  # Add intercept to weights
+    # print(f"here are the values of coeff and intercept before calculating max perturbation {coeff}, {intercept.squeeze(0)}")
+    W = torch.cat((coeff, intercept.squeeze(0)), 0)  # Add intercept to weights
     recourse = torch.cat(
         (recourse, torch.ones(1, device=recourse.device)), 0
     )  # Add 1 to the feature vector for intercept
@@ -67,7 +68,7 @@ def _calc_max_perturbation(
 def roar_recourse(
     x: np.ndarray,
     coeff: np.ndarray,
-    intercept: np.float,
+    intercept: np.float64,
     cat_feature_indices: List[List[int]],
     # binary_cat_features: bool = True,
     feature_costs: Optional[List[float]] = None,
@@ -129,8 +130,6 @@ def roar_recourse(
     coeff = torch.from_numpy(coeff).float().to(device)
     intercept = torch.from_numpy(np.asarray([intercept])).float().to(device)
 
-    print(f"This is the value of coeff {coeff} and intercept {intercept}")
-
     x = torch.from_numpy(x).float().to(device)
     y_target = torch.tensor(y_target).float().to(device)
     
@@ -165,13 +164,14 @@ def roar_recourse(
 
     # Placeholder values for first loop
     loss = torch.tensor(1)
-    loss_diff = 1
+    loss_diff = 1 + loss_threshold
     f_x_new = 0
 
     t0 = datetime.datetime.now()
     t_max = datetime.timedelta(minutes=t_max_min)
 
     while loss_diff > loss_threshold:
+
         loss_prev = loss.clone().detach()
 
         if enforce_encoding == True:
@@ -192,10 +192,13 @@ def roar_recourse(
 
         optimizer.zero_grad()
 
+
         # get the probability of the target class
         f_x_new = nn.Sigmoid()(
             torch.matmul(coeff + delta_W, x_new.squeeze()) + intercept + delta_W0
-        ).squeeze()
+        )[0]
+
+        # print(f"This is the value of f_x_new {f_x_new}")
 
         if loss_type == "MSE":
             # single logit score for the target class for MSE loss
@@ -203,16 +206,22 @@ def roar_recourse(
 
         cost = torch.dist(x_new, x, norm)
 
-        loss = loss_fn(f_x_new, target_class) + lamb * cost
+        # print(f"Here is the target and the predicted value for the target class {target_class}, {f_x_new.squeeze()}")
+
+        loss = loss_fn(f_x_new.squeeze(), target_class) + lamb * cost
         loss.backward()
 
         optimizer.step()
 
         loss_diff = torch.dist(loss_prev, loss, 2)
 
+        # print(
+        #     f"Current loss: {loss.item()}, loss_diff: {loss_diff.item()}, f_x_new: {f_x_new.item()}, cost: {cost.item()}"
+        # )
+
         if datetime.datetime.now() - t0 > t_max:
             logging.info("Timeout - ROAR didn't converge")
             break
 
-    x_new = reconstruct_encoding_constraints(x_new, cat_feature_indices)
-    return x_new.cpu().detach().numpy() #.squeeze(axis=0)
+    # x_new = reconstruct_encoding_constraints(x_new, cat_feature_indices)
+    return x_new.cpu().detach().numpy().squeeze(axis=0)

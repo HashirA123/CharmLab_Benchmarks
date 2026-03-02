@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Union
 import pandas as pd
 import numpy as np
 import torch
+from sklearn.metrics import roc_auc_score
 from data_layer.data_object import DataObject
 from model_layer.model_builder import PyTorchNeuralNetwork # make use of the existing wrapper class for pytorch models, we can add more wrapper classes for other backends as needed.
 
@@ -49,7 +50,7 @@ class ModelObject:
         self._x_test = X_test
         self._y_test = y_test
         
-        self._model.fit(X_train, y_train)
+        self._model.fit(self._x_train, self._y_train)
 
 
     def _instantiate_model(self) -> None:
@@ -102,9 +103,10 @@ class ModelObject:
         # ensure X_train is in the correct feature order as specified by the DataObject
         if isinstance(self._x_train, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
-            self._x_train = self._x_train[feature_names].values # reorder columns to match the expected feature order
+            x_train = self._x_train[feature_names].values # reorder columns to match the expected feature order
 
-        predictions = self.predict(self._x_train)
+        predictions = self.predict(x_train)
+
         accuracy = np.mean(predictions == np.asarray(self._y_train))
         return accuracy
 
@@ -121,11 +123,26 @@ class ModelObject:
         # ensure X_test is in the correct feature order as specified by the DataObject
         if isinstance(self._x_test, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
-            self._x_test = self._x_test[feature_names].values # reorder columns to match the expected feature order
+            x_test = self._x_test[feature_names].values # reorder columns to match the expected feature order
 
-        predictions = self.predict(self._x_test)
+        predictions = self.predict(x_test)
         accuracy = np.mean(predictions == np.asarray(self._y_test))
         return accuracy
+
+
+    def get_auc(self) -> float:
+        """
+        Evaluates the model's AUC on the test set that was set during initialization.
+        """
+
+        # ensure X_test is in the correct feature order as specified by the DataObject
+        if isinstance(self._x_test, pd.DataFrame):
+            feature_names = self._data_object.get_feature_names(expanded=True)
+            x_test = self._x_test[feature_names].values # reorder columns to match the expected feature order
+
+        y_proba = self.predict_proba(x_test)[:, 1] # get probability of positive class
+        auc = roc_auc_score(self._y_test, y_proba)
+        return auc
 
 
     def predict(self, x: Union[np.ndarray, pd.DataFrame, torch.Tensor]) -> Union[np.ndarray, torch.Tensor]:

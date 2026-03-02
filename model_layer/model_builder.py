@@ -58,6 +58,8 @@ class PyTorchNeuralNetwork(torch.nn.Module):
         # Output layer
         layers.append(nn.Linear(output_size, params['n_outputs']))
 
+        # self.network = nn.Sequential(*layers)
+
         if self.activation == 'sigmoid':
             self.output_activation = nn.Sigmoid()
         elif self.activation == 'softmax':
@@ -79,7 +81,7 @@ class PyTorchNeuralNetwork(torch.nn.Module):
 
         Returns
         -------
-        torch.Tensor: Predicted output tensor (in logit form)
+        torch.Tensor: Predicted output tensor
 
         Raises
         -------
@@ -137,6 +139,7 @@ class PyTorchNeuralNetwork(torch.nn.Module):
                 # pass outputs through the output activation function if specified in the config
                 # if self.output_activation is not None:
                 #     outputs = self.output_activation(outputs)
+
                 if self.activation == "softmax" and self.loss_function == 'BCE':
                     batch_y = F.one_hot(batch_y, num_classes=2) # convert to one-hot encoding for BCE loss
 

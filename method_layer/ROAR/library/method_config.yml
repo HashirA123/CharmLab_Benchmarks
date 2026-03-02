@@ -4,7 +4,7 @@ lambda_: 0.1
 delta_max: 0.1
 norm: 1
 t_max_min: 1
-loss_type: "BCE" # MCE, BCE
+loss_type: "BCE" # MSE, BCE
 y_target: [0, 1] # [0, 1] if BCE, [1] if MSE
 binary_cat_features: False
 loss_threshold: 0.0001

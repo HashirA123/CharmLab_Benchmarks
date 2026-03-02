@@ -67,6 +67,6 @@ def reconstruct_encoding_constraints(instance: torch.Tensor, cat_features_indice
     x_reconstructed = instance.clone()
 
     for index in cat_features_indices:
-        x_reconstructed[index] = torch.clamp(torch.round(x_reconstructed[index]), 0, 1)
+        x_reconstructed[0][index] = torch.clamp(torch.round(x_reconstructed[0][index]), 0, 1)
     
     return x_reconstructed

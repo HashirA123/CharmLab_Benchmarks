@@ -5,10 +5,10 @@
 # All other layer configs can be overridden from here.
 
 experiment:
-  name: "german_roar_mlp_experiment"
+  name: "german_larr_mlp_experiment"
   seed: 42
   num_factuals: 5  # how many negative-class samples to generate counterfactuals for
-  factual_selection: "all"  # Options: "negative_class", "all"
+  factual_selection: "negative_class"  # Options: "negative_class", "all"
   output_dir: "./results"
   save_results: true
   output_format: "csv"  # Options: "csv", "json", "both"
@@ -36,10 +36,8 @@ model:
 
 # ---------- Method Layer ----------
 method:
-  name: "ROAR"  # Options: "ROAR", "PROBE", etc.
+  name: "LARR"  # Options: "ROAR", "PROBE", etc.
   overrides:
-    lambda_: 0.1
-    delta_max: 0.1
     loss_type: "BCE"
 
 # ---------- Evaluation Layer ----------

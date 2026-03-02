@@ -11,7 +11,7 @@ import torch.optim as optim
 
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import List, Callable
+from typing import List, Callable, Tuple, Union
 
 def l1_cost(x1, x2):
     return np.linalg.norm(x1 - x2, 1, -1)
@@ -45,7 +45,7 @@ class RecourseCost:
     
     
 class Recourse(ABC):
-    def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float, lamb: float, imm_features: List, y_target: float = 1, seed: int|None = None):
+    def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float, lamb: float, imm_features: List, y_target: float = 1, seed: Union[int, None] = None):
         super().__init__()
         self.weights = weights
         self.bias = bias
@@ -79,7 +79,7 @@ class Recourse(ABC):
 
     
 class LARRecourse(Recourse):
-    def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float, lamb: float = 0.1, imm_features: List = [], y_target: float = 1, seed: int|None = None):
+    def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float, lamb: float = 0.1, imm_features: List = [], y_target: float = 1, seed: Union[int, None] = None):
         super().__init__(weights, bias, alpha, lamb, imm_features, y_target, seed)
         self.name = "Alg1"
     
@@ -100,7 +100,7 @@ class LARRecourse(Recourse):
             delta = 0.
         return delta   
     
-    def calc_augmented_delta(self, x: np.ndarray, i: int, theta: tuple[np.ndarray, np.ndarray], theta_p: tuple[np.ndarray, np.ndarray], beta: float, J: RecourseCost):
+    def calc_augmented_delta(self, x: np.ndarray, i: int, theta: Tuple[np.ndarray, np.ndarray], theta_p: Tuple[np.ndarray, np.ndarray], beta: float, J: RecourseCost):
         n = 201
         delta = 10
         deltas = np.linspace(-delta, delta, n)
@@ -146,7 +146,7 @@ class LARRecourse(Recourse):
             else:
                 weights_copy[idx] = 0.
     
-    def get_recourse(self, x_0: np.ndarray, beta: float = 1, theta_p: tuple[np.ndarray, np.ndarray] = None):
+    def get_recourse(self, x_0: np.ndarray, beta: float = 1, theta_p: Tuple[np.ndarray, np.ndarray] = None):
         if beta == 1.:
             return self.get_robust_recourse(x_0)
         elif beta == 0.:
@@ -160,6 +160,8 @@ class LARRecourse(Recourse):
         active = np.arange(0, self.weights.size)
         immFeatures = deepcopy(self.imm_features)
         bias = self.bias - self.alpha
+
+        # print(f"here is x_0 {x_0} and weights {self.weights} and bias {self.bias}")
 
         for i in range(weights.size):
             if x_0[i] != 0:
@@ -190,7 +192,7 @@ class LARRecourse(Recourse):
                     active = np.delete(active, i_active)            
         return x
         
-    def get_consistent_recourse(self, x_0: np.ndarray, theta_p: tuple[np.ndarray, np.ndarray]):
+    def get_consistent_recourse(self, x_0: np.ndarray, theta_p: Tuple[np.ndarray, np.ndarray]):
         x = deepcopy(x_0)
         weights, bias = theta_p
         weights_c = np.abs(weights)
@@ -207,7 +209,7 @@ class LARRecourse(Recourse):
         
         return x
     
-    def get_augmented_recourse(self, x_0: np.ndarray, theta_p: tuple[np.ndarray, np.ndarray], beta: float, eps=1e-5):
+    def get_augmented_recourse(self, x_0: np.ndarray, theta_p: Tuple[np.ndarray, np.ndarray], beta: float, eps=1e-5):
         x = deepcopy(x_0)
         J = RecourseCost(x_0, self.lamb)
         
@@ -247,20 +249,20 @@ class LARRecourse(Recourse):
                 weights[i] = self.weights[i] + (self.alpha * np.sign(x_0[i]))
         return x
     
-    def recourse_validity(self, predict_fn: Callable, recourses: np.ndarray, y_target: float|int = 1):
+    def recourse_validity(self, predict_fn: Callable, recourses: np.ndarray, y_target: Union[float, int] = 1):
         return sum(predict_fn(recourses) == y_target) / len(recourses)
 
     def recourse_expectation(self, predict_proba_fn: Callable, recourses: np.ndarray):
         return sum(predict_proba_fn(recourses)[:,1]) / len(recourses)
     
-    def lime_explanation(self, predict_proba_fn: Callable, X: np.ndarray, x: np.ndarray):
+    def lime_explanation(self, predict_label_fn: Callable, X: np.ndarray, x: np.ndarray):
         explainer = LimeTabularExplainer(training_data=X, mode='regression', discretize_continuous=False, feature_selection='none')
-        exp = explainer.explain_instance(x, predict_proba_fn, num_features=X.shape[1], model_regressor=LogisticRegression())
+        exp = explainer.explain_instance(x, predict_label_fn, num_features=X.shape[1], model_regressor=LogisticRegression())
         weights = exp.local_exp[1][0][1]
         bias = exp.intercept[1]
         return weights, bias
 
-    def choose_lambda(self, recourse_needed_X, predict_fn, X_train=None, predict_proba_fn=None):
+    def choose_lambda(self, recourse_needed_X, predict_fn, X_train=None, predict_proba_fn=None, predict_label_fn=None):
         lambdas = np.arange(0.1, 1.1, 0.1).round(1)
         v_old = 0
         print('Choosing lambda')
@@ -273,7 +275,7 @@ class LARRecourse(Recourse):
                 if self.weights is None and self.bias is None:
                     # set seed for lime
                     np.random.seed(xi)
-                    weights, bias = self.lime_explanation(predict_fn, X_train, x)
+                    weights, bias = self.lime_explanation(predict_label_fn, X_train, x)
                     weights, bias = np.round(weights, 4), np.round(bias, 4)
                     self.weights = weights
                     self.bias = bias
@@ -297,4 +299,30 @@ class LARRecourse(Recourse):
                 return lambdas[li]
         return lamb
     
+    def larr_recourse(self, 
+                    x_0: np.ndarray, 
+                    coeff: np.ndarray,
+                    intercept: np.float64, 
+                    cat_features_indices: List[int],
+                    beta: float = 1,):
+        
+        self.set_weights(coeff)
+        self.set_bias(intercept)
+
+        x_0 = x_0.squeeze() # ensure x_0 is 1D array
+
+        print(f"here is x_0 {x_0} and weights {self.weights} and bias {self.bias}")
+
+        J = RecourseCost(x_0, self.lamb)
+
+        x_r = self.get_recourse(x_0, beta=1.0)
+        weights_r, bias_r = self.calc_theta_adv(x_r)
+        theta_r = (weights_r, bias_r)
+        # J_r_opt = J.eval(x_r, weights_r, bias_r)
+        
+        # x_c = self.get_recourse(x_0, beta=0.0, theta_p=theta_r)
+        # J_c_opt = J.eval(x_c, *theta_r)
+        cf = self.get_recourse(x_0, beta=beta, theta_p=theta_r)
+
+        return cf
     

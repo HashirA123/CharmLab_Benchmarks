@@ -59,7 +59,7 @@ class RBR(MethodObject):
             indices = [factuals.columns.get_loc(feat) for feat in features]
             cat_features_indices.extend(indices)
 
-        x_train, y_train = self._model.get_train_data()
+        x_train, _ = self._model.get_train_data()
 
         cfs = []
 
@@ -69,7 +69,7 @@ class RBR(MethodObject):
                 row.to_numpy().reshape(1, -1), # reshape to 2D array for the model input
                 self._model,
                 cat_features_indices=cat_features_indices,
-                train_data=x_train,
+                train_data=x_train.to_numpy(),
                 num_samples=self._num_samples,
                 perturb_radius=self._perturb_radius,
                 delta_plus=self._delta_plus,

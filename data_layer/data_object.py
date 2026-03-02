@@ -221,7 +221,7 @@ class DataObject:
                 - y_train (pd.Series): Training targets.
                 - y_test (pd.Series): Testing targets.
         """
-        X = self._processed_df[self.get_feature_names(expanded=True)]
+        X = self._processed_df.drop(columns=self._config['target_column'], axis=1) # [self.get_feature_names(expanded=True)]
         y = self._processed_df[self._config['target_column']]
         X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=self._config['train_split'], random_state=42)
         return X_train, X_test, y_train, y_test

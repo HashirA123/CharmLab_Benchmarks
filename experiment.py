@@ -17,6 +17,7 @@ from evaluation_layer.evaluation_factory import create_evaluations
 import method_layer.ROAR.method  # noqa: F401
 import method_layer.PROBE.method  # noqa: F401
 import method_layer.RBR.method  # noqa: F401
+import method_layer.LARR.method  # noqa: F401
 import evaluation_layer.distances  # noqa: F401
 
 _DATA_RAW_PATH = {
@@ -40,6 +41,7 @@ _METHOD_CONFIG_PATHS = {
     "ROAR": "method_layer/ROAR/library/method_config.yml",
     "PROBE": "method_layer/PROBE/library/method_config.yml",
     "RBR": "method_layer/RBR/library/method_config.yml",
+    "LARR": "method_layer/LARR/library/method_config.yml",
     # add more method types and their config paths here
 }
 
@@ -59,11 +61,11 @@ def select_factuals(model: ModelObject, data: DataObject, X_test, config) -> pd.
     if factual_selection == "negative_class":
         prediction = model.predict(X_test)
         neg_indices = np.where(prediction == 0)[0] # returns the indices
-        selected = X_test[neg_indices][:num_factuals]
+        selected = X_test.to_numpy()[neg_indices][:num_factuals]
     elif factual_selection == "all":
         prediction = model.predict(X_test)
         neg_indices = np.where(prediction == 0)[0] # returns the indices
-        selected = X_test[neg_indices]
+        selected = X_test.to_numpy()[neg_indices]
     else:
         raise ValueError(f"Unknown factual selection method {factual_selection}")
     
