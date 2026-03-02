@@ -160,8 +160,12 @@ class ModelObject:
         if isinstance(x, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
             x = x[feature_names].values # reorder columns to match the expected feature order
-        
-        x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+        elif isinstance(x, torch.Tensor):
+            x_tensor = x.to(self._device)
+        else:
+            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+
         predictions = self._model.predict(x_tensor)
         if self._config.get('output_activation') == 'sigmoid':
             # If sigmoid is used, convert predictions to binary (0 or 1)
@@ -175,11 +179,16 @@ class ModelObject:
         """
         Returns the predicted classes for both classes, returns both classes in a numpy array.
         """
+        # ensure input is in tensor format for PyTorch models, and in the correct feature order as specified by the DataObject
         if isinstance(x, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
             x = x[feature_names].values # reorder columns to match the expected feature order
-        
-        x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+        elif isinstance(x, torch.Tensor):
+            x_tensor = x.to(self._device)
+        else:
+            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+
         predictions = self._model.predict(x_tensor)
         if self._config.get('output_activation') == 'sigmoid':
             # if sigmoid, we need to return both the labels for the classes, which is just the predicted label and its complement (1 - predicted label)
@@ -205,8 +214,12 @@ class ModelObject:
         if isinstance(x, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
             x = x[feature_names].values # reorder columns to match the expected feature order
-        
-        x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+        elif isinstance(x, torch.Tensor):
+            x_tensor = x.to(self._device)
+        else:
+            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+            
         predictions = self._model.predict(x_tensor)
 
         if self._config.get('output_activation') == 'sigmoid':

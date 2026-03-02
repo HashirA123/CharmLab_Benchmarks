@@ -68,7 +68,6 @@ class ROAR(MethodObject):
 
         encoded_feature_names = self._data.get_categorical_features(expanded=True)
 
-        # cat_features_indeces should be a 2d array so that each row corresponds to the indices of the one-hot encoded features for a particular categorical variable.
         cat_features_indices = []
         for features in encoded_feature_names:
             # Find the indices of these encoded features in the processed dataframe
