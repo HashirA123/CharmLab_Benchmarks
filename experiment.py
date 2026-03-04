@@ -118,6 +118,7 @@ def run_experiment(config_path: str):
     # ---------- Select factuals for counterfactual generation -----------
     X_test, y_test = model_object.get_test_data()
     factuals = select_factuals(model_object, data_object, X_test, experiment)
+    factuals = factuals.astype(np.float32) # ensure factuals are in numeric format for the methods
     logger.info(f"Selected {len(factuals)} factual instances.")
 
     # ---------- Method layer loading and config merging -----------

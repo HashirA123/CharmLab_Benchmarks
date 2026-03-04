@@ -59,7 +59,7 @@ class Recourse(ABC):
     def calc_theta_adv(self, x: np.ndarray):
         weights_adv = self.weights - (self.alpha * np.sign(x))
         for i in range(len(x)):
-            if np.sign(x[i]) == 0:
+            if np.sign(float(x[i])) == 0:
                 weights_adv[i] = weights_adv[i] - (self.alpha * np.sign(weights_adv[i]))
         bias_adv = self.bias - self.alpha
         
@@ -112,11 +112,11 @@ class LARRecourse(Recourse):
         return deltas[min_i]
 
     def sign(self, x):
-        s = np.sign(x)
+        s = np.sign(float(x))
         if s == 0: return 1
         return s
     
-    def sign_x(self, x: np.float64, direction: int) -> int:
+    def sign_x(self, x: float, direction: int) -> int:
         """
         direction = 1 -> x want to move to positive
         direction = -1 -> x want to move to negative
@@ -147,6 +147,7 @@ class LARRecourse(Recourse):
                 weights_copy[idx] = 0.
     
     def get_recourse(self, x_0: np.ndarray, beta: float = 1, theta_p: Tuple[np.ndarray, np.ndarray] = None):
+        # x_0 = np.array(x_0, dtype=np.float32)
         if beta == 1.:
             return self.get_robust_recourse(x_0)
         elif beta == 0.:
@@ -165,7 +166,7 @@ class LARRecourse(Recourse):
 
         for i in range(weights.size):
             if x_0[i] != 0:
-                weights[i] = self.weights[i] - (self.alpha * np.sign(x_0[i]))
+                weights[i] = self.weights[i] - (self.alpha * np.sign(float(x_0[i])))
             else:
                 if np.abs(self.weights[i]) > self.alpha:
                     weights[i] = self.weights[i] - (self.alpha * np.sign(self.weights[i]))
@@ -181,13 +182,17 @@ class LARRecourse(Recourse):
             c = (x @ weights) + bias
             delta = self.calc_delta(weights[i], c)
 
-            if self.sign_x(x[i] + delta, directions[i]) == self.sign_x(x[i], directions[i]):
-                x[i] += delta
+            if self.sign_x(x[i] + delta, directions[i]) == self.sign_x(float(x[i]), directions[i]):
+                # x[i] += delta
+                if hasattr(delta, 'item'):
+                    x[i] += delta.item()
+                else:
+                    x[i] += float(delta)
                 break
             else:
                 x[i] = 0
                 if np.abs(self.weights[i]) > self.alpha:
-                    weights[i] = self.weights[i] + (self.alpha * np.sign(x_0[i]))
+                    weights[i] = self.weights[i] + (self.alpha * np.sign(float(x_0[i])))
                 else:
                     active = np.delete(active, i_active)            
         return x
@@ -226,7 +231,7 @@ class LARRecourse(Recourse):
                 if i in self.imm_features:
                     continue
                 delta = self.calc_augmented_delta(x, i, (weights, bias), (weights_p, bias_p), beta, J)
-                if (x[i] == 0) and (x[i] != x_0[i]) and (self.sign(x_0[i]) == self.sign(delta)):
+                if (x[i] == 0) and (x[i] != x_0[i]) and (self.sign(float(x_0[i])) == self.sign(delta)):
                     delta = 0
                 x_new = deepcopy(x)
                 x_new[i] += delta
@@ -246,7 +251,7 @@ class LARRecourse(Recourse):
                 x[i] = x_i + delta
             else:
                 x[i] = 0
-                weights[i] = self.weights[i] + (self.alpha * np.sign(x_0[i]))
+                weights[i] = self.weights[i] + (self.alpha * np.sign(float(x_0[i])))
         return x
     
     def recourse_validity(self, predict_fn: Callable, recourses: np.ndarray, y_target: Union[float, int] = 1):
@@ -302,7 +307,7 @@ class LARRecourse(Recourse):
     def larr_recourse(self, 
                     x_0: np.ndarray, 
                     coeff: np.ndarray,
-                    intercept: np.float64, 
+                    intercept: float, 
                     cat_features_indices: List[int],
                     beta: float = 1,):
         

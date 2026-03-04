@@ -160,11 +160,13 @@ class ModelObject:
         if isinstance(x, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
             x = x[feature_names].values # reorder columns to match the expected feature order
-            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+            x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
+            x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
         elif isinstance(x, torch.Tensor):
             x_tensor = x.to(self._device)
         else:
-            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+            x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
+            x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
 
         predictions = self._model.predict(x_tensor)
         if self._config.get('output_activation') == 'sigmoid':
@@ -183,11 +185,13 @@ class ModelObject:
         if isinstance(x, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
             x = x[feature_names].values # reorder columns to match the expected feature order
-            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+            x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
+            x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
         elif isinstance(x, torch.Tensor):
             x_tensor = x.to(self._device)
         else:
-            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+            x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
+            x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
 
         predictions = self._model.predict(x_tensor)
         if self._config.get('output_activation') == 'sigmoid':
@@ -214,12 +218,14 @@ class ModelObject:
         if isinstance(x, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
             x = x[feature_names].values # reorder columns to match the expected feature order
-            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
+            x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
+            x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
         elif isinstance(x, torch.Tensor):
             x_tensor = x.to(self._device)
         else:
-            x_tensor = torch.tensor(x, dtype=torch.float32, device=self._device)
-            
+            x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
+            x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
+
         predictions = self._model.predict(x_tensor)
 
         if self._config.get('output_activation') == 'sigmoid':

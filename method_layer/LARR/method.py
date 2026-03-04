@@ -58,13 +58,14 @@ class LARR(MethodObject):
         # search for optimal lamda during initialization, so that we don't have to do it for every instance during counterfactual generation
 
         X_train, _ = self._model.get_train_data()
+        # print(f"This is what the training data looks like before passing to LARR {X_train}")
 
         predictions = self._model.predict(X_train)
 
         recourse_needed = X_train.iloc[
             np.where(predictions == 0)
         ]
-
+        # print(f"this is what recourse needed looks like {recourse_needed}")
         if len(recourse_needed) == 0:
             raise ValueError("No recourse needed for any instance in the training data. Please check your model and data.")
         

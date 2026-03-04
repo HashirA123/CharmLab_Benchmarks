@@ -69,7 +69,7 @@ class RBR(MethodObject):
                 row.to_numpy().reshape(1, -1), # reshape to 2D array for the model input
                 self._model,
                 cat_features_indices=cat_features_indices,
-                train_data=x_train.to_numpy(),
+                train_data=x_train.to_numpy().astype(np.float32),
                 num_samples=self._num_samples,
                 perturb_radius=self._perturb_radius,
                 delta_plus=self._delta_plus,

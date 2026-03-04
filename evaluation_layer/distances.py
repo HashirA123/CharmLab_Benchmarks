@@ -28,7 +28,7 @@ def l0_distance(delta: np.ndarray) -> List[float]:
     num_feature_changes = np.sum(
         difference_mask,
         axis=1,
-        dtype=np.float,
+        dtype=np.float32,
     )
     distance = num_feature_changes.tolist()
     return distance
@@ -48,7 +48,7 @@ def l1_distance(delta: np.ndarray) -> List[float]:
     List[float]
     """
     absolute_difference = np.abs(delta)
-    distance = np.sum(absolute_difference, axis=1, dtype=np.float).tolist()
+    distance = np.sum(absolute_difference, axis=1, dtype=np.float32).tolist()
     return distance
 
 
@@ -66,7 +66,7 @@ def l2_distance(delta: np.ndarray) -> List[float]:
     List[float]
     """
     squared_difference = np.square(np.abs(delta))
-    distance = np.sum(squared_difference, axis=1, dtype=np.float).tolist()
+    distance = np.sum(squared_difference, axis=1, dtype=np.float32).tolist()
     return distance
 
 
@@ -85,7 +85,7 @@ def linf_distance(delta: np.ndarray) -> List[float]:
     """
     absolute_difference = np.abs(delta)
     # get the largest change per row
-    largest_difference = np.max(absolute_difference, axis=1)
+    largest_difference = np.max(absolute_difference, axis=1).astype(np.float32)
     distance = largest_difference.tolist()
     return distance
 

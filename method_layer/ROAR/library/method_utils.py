@@ -68,7 +68,7 @@ def _calc_max_perturbation(
 def roar_recourse(
     x: np.ndarray,
     coeff: np.ndarray,
-    intercept: np.float64,
+    intercept: np.float32,
     cat_feature_indices: List[List[int]],
     # binary_cat_features: bool = True,
     feature_costs: Optional[List[float]] = None,
@@ -92,7 +92,7 @@ def roar_recourse(
         Factual to explain.
     coeff: np.ndarray
         Coefficient for factual x.
-    intercept: np.float
+    intercept: float
         Intercept for factual x.
     cat_feature_indices: list
         List of positions of categorical features in x.
@@ -127,10 +127,10 @@ def roar_recourse(
     # if feature_costs is not None:
     #     feature_costs = torch.from_numpy(feature_costs).float().to(device)
 
-    coeff = torch.from_numpy(coeff).float().to(device)
+    coeff = torch.from_numpy(coeff.astype(np.float32)).to(device)
     intercept = torch.from_numpy(np.asarray([intercept])).float().to(device)
 
-    x = torch.from_numpy(x).float().to(device)
+    x = torch.from_numpy(x.astype(np.float32)).to(device)
     y_target = torch.tensor(y_target).float().to(device)
     
     lamb = torch.tensor(lambda_param).float().to(device)
