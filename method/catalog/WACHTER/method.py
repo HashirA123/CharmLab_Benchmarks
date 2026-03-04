@@ -5,7 +5,7 @@ import yaml
 from config_utils import deep_merge
 from data.data_object import DataObject
 from evaluation.utils import check_counterfactuals
-from method.catalog.WACHTER.library.method_util import wachter_recourse
+from method.catalog.WACHTER.library.util import wachter_recourse
 from method.method_factory import register_method
 from method.method_object import MethodObject
 from model.model_object import ModelObject

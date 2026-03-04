@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression
 import yaml
 from data.data_object import DataObject
 from evaluation.utils import check_counterfactuals
-from method.catalog.LARR.library.method_utils import LARRecourse
+from method.catalog.LARR.library.utils import LARRecourse
 from method.method_factory import register_method
 from method.method_object import MethodObject
 from model.model_object import ModelObject

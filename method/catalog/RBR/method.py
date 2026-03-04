@@ -6,7 +6,7 @@ import yaml
 from config_utils import deep_merge
 from data.data_object import DataObject
 from evaluation.utils import check_counterfactuals
-from method.catalog.RBR.library.method_utils import rbr_recourse
+from method.catalog.RBR.library.utils import rbr_recourse
 from method.method_factory import register_method
 from model.model_object import ModelObject
 from method.method_object import MethodObject
