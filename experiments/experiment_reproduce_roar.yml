@@ -8,7 +8,7 @@ experiment:
   name: "german_roar_mlp_experiment"
   seed: 42
   num_factuals: 5  # how many negative-class samples to generate counterfactuals for
-  factual_selection: "negative_class"  # Options: "negative_class", "all"
+  factual_selection: "all"  # Options: "negative_class", "all"
   output_dir: "./results"
   save_results: true
   output_format: "csv"  # Options: "csv", "json", "both"
