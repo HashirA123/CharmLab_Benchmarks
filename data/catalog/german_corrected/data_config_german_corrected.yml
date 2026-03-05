@@ -1,0 +1,86 @@
+# NOTE: each dataset should have its own yaml with the same exact structure
+# this will help to ensure that there isn't one massive yaml.
+# benefits of this approach:
+#   - easier to maintain and update for each dataset
+#   - we can add as much information, and use it if necessary.
+name: "german_corrected"
+target_column: "credit_risk"
+train_split: 0.7
+balance_classes: false
+preprocessing_strategy: "standardize" # Options: normalize, standardize, min-max none
+cache_dir: "./.data_cache" # For caching, currently we pickle and save the processed datasets
+# Explicitly defines the base order of columns before encoding.
+feature_order: ["duration", "amount", "age", "personal_status_sex"]
+post_encoding_feat_order: ["duration", "amount", "age", "personal_status_sex_cat_1", "personal_status_sex_cat_2", "personal_status_sex_cat_3", "personal_status_sex_cat_4"]
+
+# The module will ONLY load the features explicitly defined below.
+# If "NativeCountry" is in the CSV but not here, it gets dropped.
+
+# Other thinks to add here potentially:
+#   - min and max values for features? is that better to dynamically calculate in the script?
+
+features:
+  duration:
+    short_name: "x0"
+    type: "numerical"
+    node_type: "input"
+    actionability: "same-or-increase"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: [17, 90] # Optional: can be used for validation or scaling
+    
+  amount:
+    short_name: "x1"
+    type: "numerical"
+    node_type: "input"
+    actionability: "same-or-increase"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    
+  age:
+    short_name: "x2"
+    type: "numerical"
+    node_type: "input"
+    actionability: "same-or-increase"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: [18, 80] # Optional: can be used for validation or scaling
+
+  personal_status_sex:
+    short_name: "x3"
+    type: "categorical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names: ["personal_status_sex_cat_1", "personal_status_sex_cat_2", "personal_status_sex_cat_3", "personal_status_sex_cat_4"]
+    impute: "mode"
+
+  credit_risk:
+    short_name: "y"
+    type: "binary"
+    node_type: "output"
+    actionability: "none"
+    mutability: false
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "drop"
+    domain: [0, 1]
+
+  # etc

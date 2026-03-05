@@ -1,0 +1,9 @@
+num_samples: 200
+perturb_radius: 0.2
+delta_plus: 1.0
+sigma: 1.0
+epsilon_op: 0.5
+epsilon_pe: 1.0
+max_iter: 1000
+device: "cpu"
+clamp: False

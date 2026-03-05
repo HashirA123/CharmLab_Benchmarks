@@ -1,0 +1,50 @@
+# ============================================================
+# Top-Level Experiment Configuration
+# ============================================================
+# This file is the ONLY thing a user needs to create/modify.
+# All other layer configs can be overridden from here.
+
+experiment:
+  name: "german_rbr_mlp_experiment"
+  seed: 42
+  num_factuals: 5  # how many negative-class samples to generate counterfactuals for
+  factual_selection: "negative_class"  # Options: "negative_class", "all"
+  output_dir: "./results"
+  save_results: true
+  output_format: "csv"  # Options: "csv", "json", "both"
+  logger: "info"  # Options: "debug", "info", "warning", "error"
+
+# ---------- Data Layer ----------
+data:
+  - name: "german"
+  # Override any key inside the data config without editing it directly.
+  # Keys here are merged ON TOP of whatever is in data_config_<name>.yml.
+    overrides:
+      train_split: 0.8
+      balance_classes: false
+      preprocessing_strategy: "standardize"
+
+# ---------- Model Layer ----------
+model:
+  name: "mlp" # Options: "mlp", "logistic_regression", etc.
+  overrides:
+    epochs: 100
+    learning_rate: 0.001
+    batch_size: 1000
+    hidden_layers: [[20, 50], [50, 20]]
+    output_activation: "sigmoid"
+
+# ---------- Method Layer ----------
+method:
+  name: "RBR"  # Options: "ROAR", "PROBE", etc.
+  overrides:
+    device: "cuda"  # Options: "cuda", "cpu"
+
+# ---------- Evaluation Layer ----------
+evaluation:
+  metrics:
+    - name: "Distance"
+      # hyperparameters: {}  # Optional per-metric hyperparameters
+  # Future: you could add more metric objects here
+  # - name: "Sparsity"
+  # - name: "Validity"

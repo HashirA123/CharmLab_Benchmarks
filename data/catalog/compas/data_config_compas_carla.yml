@@ -1,0 +1,113 @@
+# The carla version of compas, for the paper on PROBE, says to treat all their variables as continous, but that doesnt make sense?
+
+name: "compas"
+target_column: "score"
+train_split: 0.7
+balance_classes: false
+preprocessing_strategy: "standardize" # Options: normalize, standardize, min-max none
+cache_dir: "./.data_cache" # For caching, currently we pickle and save the processed datasets
+# Explicitly defines the base order of columns before encoding.
+feature_order: ["age", "two_year_recid", "priors_count", "length_of_stay", "c_charge_degree", "race", "sex"]
+# post_encoding_feat_order: ["age", "two_year_recid", "priors_count", "length_of_stay", "c_charge_degree", "race", "sex"]
+post_encoding_feat_order: ["age", "two_year_recid", "priors_count", "length_of_stay", "c_charge_degree_cat_M", "c_charge_degree_cat_F", "race_cat_African-American", "race_cat_Other", "sex_cat_Female", "sex_cat_Male"]
+
+features:
+  age:
+    short_name: "x0"
+    type: "numerical"
+    node_type: "input"
+    actionability: "same-or-increase"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: [17, 90] # Optional: can be used for validation or scaling
+    
+  two_year_recid:
+    short_name: "x1"
+    type: "numerical"
+    node_type: "input"
+    actionability: "same-or-increase"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    
+  priors_count:
+    short_name: "x2"
+    type: "numerical"
+    node_type: "input"
+    actionability: "same-or-increase"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+
+  length_of_stay:
+    short_name: "x3"
+    type: "numerical"
+    node_type: "input"
+    actionability: "same-or-increase"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+
+  c_charge_degree:
+    short_name: "x4"
+    type: "categorical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names: ["c_charge_degree_cat_M", "c_charge_degree_cat_F"]
+    impute: "mode"
+
+  race:
+    short_name: "x5"
+    type: "categorical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names: ["race_cat_African-American", "race_cat_Other"]
+    impute: "mode"
+
+  sex:
+    short_name: "x6"
+    type: "categorical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names: ["sex_cat_Female", "sex_cat_Male"]
+    impute: "mode"
+
+  score:
+    short_name: "y"
+    type: "binary"
+    node_type: "output"
+    actionability: "none"
+    mutability: false
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "drop"
+    domain: [0, 1]
+
+  # etc
