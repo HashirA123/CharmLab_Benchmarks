@@ -19,10 +19,10 @@ class DataObject:
     The "get_preprocessing()" acts like a controller that, based on configs, will call appropriate util 
     funtions. (think large if-else block).
 
-    The attributes and util member methods can be expanded on a method need bases. 
-
-    NOTE: The metadata attribute is meant to store the meta data. This can be stored as a dictionary with features as keys,
-    and the values can be either a) another dictionary or b) a custom class similar to the existing "DatasetAttribute" in the repo. 
+    * Update (05/03/2026):
+        - This class can now be extended for specific datasets and the get_preprocessing() 
+        method can be overridden to implement dataset-specific preprocessing, making use of 
+        any of the defined member functions of this parent class.
 
     Attributes:
         raw_df (pd.DataFrame): The original, unprocessed data loaded from CSV.
@@ -42,9 +42,7 @@ class DataObject:
             config_override (Optional[Dict[str, Any]]): Optional dictionary of config overrides.
         """
         self._metadata = {}
-        self._raw_df = pd.read_csv(data_path).sample(frac=1, random_state=1).reset_index(drop=True)
-        self._processed_df = self._raw_df.copy() # This will be transformed in place through the preprocessing pipeline.
-        
+
         if config_path is not None:
             with open(config_path, 'r') as file:
                 self._config = yaml.safe_load(file)
@@ -55,21 +53,9 @@ class DataObject:
         if config_override is not None:
             self._config = config_override
 
-        # drop columns not defined in the config
-        columns_to_drop = [col for col in self._raw_df.columns if col not in self._config['features'].keys()]
-        self._processed_df = self._processed_df.drop(columns=columns_to_drop, errors='ignore')
-        self._target = self._config['target_column']
+        self._data_path = data_path
 
-        for feature in self._config['features']:
-            if feature not in self._raw_df.columns:
-                raise ValueError(f"Feature '{feature}' defined in config is not present in the raw dataset.")
-            else:
-                # right now the conifgs are just being stored as another dictionary
-                # which isnt much different fomrjust storing as a whole config.
-                # this may need to be updated in the future if necessary.
-                self._metadata[feature] = self._config['features'][feature]
-
-        self.get_preprocessing() # This will execute the entire preprocessing pipeline and populate processed_df and metadata.
+        # self.get_preprocessing() # This will execute the entire preprocessing pipeline and populate processed_df and metadata.
         
 
     def get_preprocessing(self) -> None:
@@ -86,6 +72,7 @@ class DataObject:
         Returns:
             None. Modifies `self.processed_df` and `self.metadata` in place.
         """
+        self._read_raw_data()
         self._apply_scaling()
         self._apply_encoding()
         self._balance_dataset()
@@ -138,6 +125,38 @@ class DataObject:
                 else:
                     categorical_features.append(feature)
         return categorical_features
+
+    def _read_raw_data(self):
+        """
+        Read the raw data from the CSV file and store relevant features and metadata.
+
+        * This method must create the following member variables:
+            - self._raw_df: The original, unprocessed data loaded from CSV.
+            - self._processed_df: The data after all preprocessing steps are applied.
+            - self._target: The name of the target column in the dataset.
+            - self._metadata: Generated bounds, constraints, and structural info for features.
+
+        How you go about creating these member variables is up to you, but they must be created by the end of this method.
+        and must follow specifications of the parent docstring. You can create additional member variables
+        if you need them.
+        """
+
+        self._raw_df = pd.read_csv(self._data_path)
+        self._processed_df = self._raw_df.copy() # This will be transformed in place through the preprocessing pipeline.
+
+        # drop columns not defined in the config
+        columns_to_drop = [col for col in self._raw_df.columns if col not in self._config['features'].keys()]
+        self._processed_df = self._processed_df.drop(columns=columns_to_drop, errors='ignore')
+        self._target = self._config['target_column']
+
+        for feature in self._config['features']:
+            if feature not in self._raw_df.columns:
+                raise ValueError(f"Feature '{feature}' defined in config is not present in the raw dataset.")
+            else:
+                # right now the conifgs are just being stored as another dictionary
+                # which isnt much different fomrjust storing as a whole config.
+                # this may need to be updated in the future if necessary.
+                self._metadata[feature] = self._config['features'][feature]
 
     def _apply_encoding(self) -> None:
         """
@@ -313,48 +332,6 @@ class DataObject:
 
         Returns:
             pd.DataFrame: Data in the original feature space.
-        """
-        pass
-
-    def get_actionability_mask(self, as_tensor: bool = False) -> Any:
-        """
-        Generates a boolean mask indicating which processed features are mutable.
-        
-        This dynamically maps the YAML 'mutability' and 'actionability' constraints 
-        to the final expanded feature space (accounting for the extra columns created 
-        by one-hot encoding). Useful for freezing gradients on immutable features 
-        during counterfactual optimization.
-
-        Args:
-            as_tensor (bool): If True, returns a PyTorch boolean tensor. If False, 
-                              returns a NumPy array.
-
-        Returns:
-            Union[np.ndarray, torch.Tensor]: A boolean mask matching the feature dimension.
-        """
-        pass
-        
-    def get_actionability_directions(self) -> Dict[str, int]:
-        """
-        Returns a mapping of feature names to their directional constraints.
-        E.g., {'Age': 1, 'EducationLevel': 1, 'WorkClass': 0} where 1 implies 
-        'same-or-increase' and 0 implies 'any'.
-        """
-        pass
-
-    def to_dataloaders(self, batch_size: int = 32) -> Tuple[Any, Any]:
-        """
-        Converts the processed train and test splits directly into PyTorch DataLoaders.
-        
-        Handles the conversion of pandas DataFrames to float32/int64 PyTorch Tensors. 
-        This is particularly useful when prepping the data for standard model training 
-        or passing it into PyTorch-based recourse optimizers.
-
-        Args:
-            batch_size (int): The batch size for the DataLoaders.
-
-        Returns:
-            Tuple[DataLoader, DataLoader]: Training and testing data loaders.
         """
         pass
 
