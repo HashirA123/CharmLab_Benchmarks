@@ -304,7 +304,8 @@ def rbr_recourse(
     x0: np.ndarray,
     model: ModelObject,
     cat_features_indices: Optional[Sequence[int]] = None,
-    train_data: Optional[np.ndarray] = None,
+    train_t: torch.tensor= None,
+    train_label: torch.tensor = None,
     num_samples: int = 200,
     perturb_radius: float = 0.2,
     delta_plus: float = 1.0,
@@ -318,70 +319,18 @@ def rbr_recourse(
     verbose: bool = False,
 ) -> np.ndarray:
     
-    def make_prediction(x):
-        return torch.tensor(model.predict(x.cpu().detach().numpy()))
-
-    # find boundary point between x0 and nearest opposite-label train point
-    def dist(a: torch.Tensor, b: torch.Tensor):
-        return torch.linalg.norm(a - b, ord=1, axis=-1)
-
-    # feasible set sampled around x_b
-    def uniform_ball(x: torch.Tensor, r: float, n: int, rng_state):
-        rng_local = check_random_state(rng_state)
-        # print(f"this is x: {x}")
-        d = x.shape[0]
-        # print(d)
-        V = rng_local.randn(n, d)
-        V = V / np.linalg.norm(V, axis=1).reshape(-1, 1)
-        V = V * (rng_local.random(n) ** (1.0 / d)).reshape(-1, 1)
-        V = V * r + x.cpu().numpy()
-        return torch.from_numpy(V).float().to(device)
-
-    def simplex_projection(x, delta):
-        """
-        Euclidean projection on a positive simplex
-        """
-        (p,) = x.shape
-        if torch.linalg.norm(x, ord=1) == delta and torch.all(x >= 0):
-            return x
-        u, _ = torch.sort(x, descending=True)
-        cssv = torch.cumsum(u, 0)
-        rho = torch.nonzero(u * torch.arange(1, p + 1).to(device) > (cssv - delta))[-1, 0]
-        theta = (cssv[rho] - delta) / (rho + 1.0)
-        w = torch.clip(x - theta, min=0)
-        return w
-
-    def projection(x, delta):
-        """
-        Euclidean projection on an L1-ball
-        """
-        x_abs = torch.abs(x)
-        if x_abs.sum() <= delta:
-            return x
-
-        proj = simplex_projection(x_abs, delta=delta)
-        proj *= torch.sign(x)
-
-        return proj
-
-
     rng = check_random_state(random_state)
 
-    if train_data is None:
-        raise ValueError("train_data must be provided to robust_bayesian_recourse")
+    if train_t is None:
+        raise ValueError("train data (tensor) must be provided to robust_bayesian_recourse")
 
     # ------- Implementation of fit_instance() ------------------
     x0_t = torch.from_numpy(x0.copy()).float().to(device)
     print(f"x0_t: {x0_t}")
 
-    train_t = torch.tensor(train_data).float().to(device)
-
-    # training label vector
-    train_label = make_prediction(train_t).detach().to(device)
-
     # -------- Implementation of find_x_boundary() ---------------
     # find nearest opposite label examples and search along line for boundary
-    x_label = make_prediction(x0_t.clone()).detach().to(device)
+    x_label = make_prediction(x0_t.clone(), model).detach().to(device)
     print(f"x_label: {x_label}")
 
     dists = dist(train_t, x0_t)
@@ -394,7 +343,7 @@ def rbr_recourse(
         lambdas = torch.linspace(0, 1, 100, device=device)
         for lam in lambdas:
             x_b = (1 - lam) * x0_t + lam * x_c
-            label = make_prediction(x_b).to(device)
+            label = make_prediction(x_b, model).to(device)
             if label == 1 - x_label:
                 curdist = dist(x0_t, x_b)
                 if curdist < best_dist:
@@ -417,7 +366,7 @@ def rbr_recourse(
 
     print(f"best_x_b: {best_x_b}, delta: {delta}")
 
-    X_feas = uniform_ball(best_x_b, perturb_radius, num_samples, rng).float().to(device)
+    X_feas = uniform_ball(best_x_b, perturb_radius, num_samples, rng, device).float().to(device)
 
     # apply categorical clamping if requested
     # not used in original code.
@@ -425,7 +374,7 @@ def rbr_recourse(
     #     for i in range(X_feas.shape[0]):
     #         X_feas[i] = reconstruct_encoding_constraints(X_feas[i], cat_features_indices)
 
-    y_feas = make_prediction(X_feas)
+    y_feas = make_prediction(X_feas, model)
 
 
     if (y_feas == 1).any():
@@ -481,7 +430,7 @@ def rbr_recourse(
             #     x_new - x0_t, float(delta)
             # )
 
-            x_new = projection(x_new - x0_t, float(delta)) + x0_t
+            x_new = projection(x_new - x0_t, float(delta), device) + x0_t
 
         # print(f"x_new: {x_new}")
 
@@ -510,3 +459,50 @@ def rbr_recourse(
     # ----------------------------- end of optimize() -----------------------
 
     return cf
+
+
+def make_prediction(x, model):
+    return torch.tensor(model.predict(x.cpu().detach().numpy()))
+
+# find boundary point between x0 and nearest opposite-label train point
+def dist(a: torch.Tensor, b: torch.Tensor):
+    return torch.linalg.norm(a - b, ord=1, axis=-1)
+
+# feasible set sampled around x_b
+def uniform_ball(x: torch.Tensor, r: float, n: int, rng_state, device: torch.device):
+    rng_local = check_random_state(rng_state)
+    # print(f"this is x: {x}")
+    d = x.shape[0]
+    # print(d)
+    V = rng_local.randn(n, d)
+    V = V / np.linalg.norm(V, axis=1).reshape(-1, 1)
+    V = V * (rng_local.random(n) ** (1.0 / d)).reshape(-1, 1)
+    V = V * r + x.cpu().numpy()
+    return torch.from_numpy(V).float().to(device)
+
+def simplex_projection(x, delta, device):
+    """
+    Euclidean projection on a positive simplex
+    """
+    (p,) = x.shape
+    if torch.linalg.norm(x, ord=1) == delta and torch.all(x >= 0):
+        return x
+    u, _ = torch.sort(x, descending=True)
+    cssv = torch.cumsum(u, 0)
+    rho = torch.nonzero(u * torch.arange(1, p + 1).to(device) > (cssv - delta))[-1, 0]
+    theta = (cssv[rho] - delta) / (rho + 1.0)
+    w = torch.clip(x - theta, min=0)
+    return w
+
+def projection(x, delta, device):
+    """
+    Euclidean projection on an L1-ball
+    """
+    x_abs = torch.abs(x)
+    if x_abs.sum() <= delta:
+        return x
+
+    proj = simplex_projection(x_abs, delta=delta, device=device)
+    proj *= torch.sign(x)
+
+    return proj

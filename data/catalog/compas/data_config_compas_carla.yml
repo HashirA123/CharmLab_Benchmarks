@@ -3,7 +3,7 @@
 name: "compas"
 target_column: "score"
 train_split: 0.7
-balance_classes: false
+balance_classes: False
 preprocessing_strategy: "normalize" # Options: normalize, standardize, min-max none
 cache_dir: "./.data_cache" # For caching, currently we pickle and save the processed datasets
 # Explicitly defines the base order of columns before encoding.
@@ -17,7 +17,7 @@ features:
     type: "numerical"
     node_type: "input"
     actionability: "same-or-increase"
-    mutability: true
+    mutability: True
     parent: null
     parent_short: null
     encode: null # Numeric, no encoding needed
@@ -30,7 +30,7 @@ features:
     type: "numerical"
     node_type: "input"
     actionability: "same-or-increase"
-    mutability: true
+    mutability: True
     parent: null
     parent_short: null
     encode: null # Numeric, no encoding needed
@@ -42,7 +42,7 @@ features:
     type: "numerical"
     node_type: "input"
     actionability: "same-or-increase"
-    mutability: true
+    mutability: True
     parent: null
     parent_short: null
     encode: null # Numeric, no encoding needed
@@ -54,7 +54,7 @@ features:
     type: "numerical"
     node_type: "input"
     actionability: "same-or-increase"
-    mutability: true
+    mutability: True
     parent: null
     parent_short: null
     encode: null # Numeric, no encoding needed
@@ -66,7 +66,7 @@ features:
     type: "categorical"
     node_type: "input"
     actionability: "any"
-    mutability: true
+    mutability: True
     parent: null
     parent_short: null
     encode: "one-hot"
@@ -78,7 +78,7 @@ features:
     type: "categorical"
     node_type: "input"
     actionability: "any"
-    mutability: true
+    mutability: True
     parent: null
     parent_short: null
     encode: "one-hot"
@@ -90,7 +90,7 @@ features:
     type: "categorical"
     node_type: "input"
     actionability: "any"
-    mutability: true
+    mutability: True
     parent: null
     parent_short: null
     encode: "one-hot"
@@ -102,7 +102,7 @@ features:
     type: "binary"
     node_type: "output"
     actionability: "none"
-    mutability: false
+    mutability: False
     parent: null
     parent_short: null
     encode: null

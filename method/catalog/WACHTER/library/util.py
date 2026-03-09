@@ -102,7 +102,7 @@ def wachter_recourse(
         raise ValueError(f"loss_type {loss_type} not supported")
 
     # get the probablity of the target class
-    f_x_new = model.predict_proba(x_new).squeeze(axis=0)[:, target_class]
+    f_x_new = model(x_new)[:, target_class]
 
     t0 = datetime.datetime.now()
     t_max = datetime.timedelta(minutes=t_max_min)
@@ -115,14 +115,14 @@ def wachter_recourse(
             )
             # use x_new_enc for prediction results to ensure constraints
             # get the probablity of the target class
-            f_x_new = model.predict_proba(x_new_enc).squeeze(axis=0)[:, target_class]
+            f_x_new = model(x_new_enc)[:, target_class]
 
             if loss_type == "MSE":
                 # single logit score for the target class for MSE loss
                 f_x_loss = torch.log(f_x_new / (1 - f_x_new))
             elif loss_type == "BCE":
                 # tuple output for BCE loss
-                f_x_loss = model.predict_proba(x_new_enc).squeeze(axis=0)
+                f_x_loss = model(x_new_enc).squeeze(axis=0)
             else:
                 raise ValueError(f"loss_type {loss_type} not supported")
 

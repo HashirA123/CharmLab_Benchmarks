@@ -1,12 +1,13 @@
 from typing import Optional, Dict, Any
 
 import numpy as np
+import torch
 import yaml
 
 from experiment_utils import deep_merge
 from data.data_object import DataObject
 from evaluation.utils import check_counterfactuals
-from method.catalog.RBR.library.utils import rbr_recourse
+from method.catalog.RBR.library.utils import make_prediction, rbr_recourse
 from method.method_factory import register_method
 from model.model_object import ModelObject
 from method.method_object import MethodObject
@@ -46,6 +47,13 @@ class RBR(MethodObject):
         self._device = self.config["device"]
         self._clamp = self.config["clamp"]
 
+        x_train, _ = self._model.get_train_data()
+
+        self._train_t = torch.tensor(x_train.to_numpy().astype(np.float32)).to(self._device)
+
+        # training label vector
+        self._train_label = make_prediction(self._train_t, self._model).detach().to(self._device)
+
     
     def get_counterfactuals(self, factuals: pd.DataFrame) -> pd.DataFrame:
         factuals = factuals.reset_index()
@@ -57,9 +65,7 @@ class RBR(MethodObject):
         for features in encoded_feature_names:
             # Find the indices of these encoded features in the processed dataframe
             indices = [factuals.columns.get_loc(feat) for feat in features]
-            cat_features_indices.extend(indices)
-
-        x_train, _ = self._model.get_train_data()
+            cat_features_indices.append(indices)
 
         cfs = []
 
@@ -69,7 +75,8 @@ class RBR(MethodObject):
                 row.to_numpy().reshape(1, -1), # reshape to 2D array for the model input
                 self._model,
                 cat_features_indices=cat_features_indices,
-                train_data=x_train.to_numpy().astype(np.float32),
+                train_t=self._train_t,
+                train_label=self._train_label,
                 num_samples=self._num_samples,
                 perturb_radius=self._perturb_radius,
                 delta_plus=self._delta_plus,

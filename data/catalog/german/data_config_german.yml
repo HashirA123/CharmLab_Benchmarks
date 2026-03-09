@@ -25,7 +25,7 @@ features:
     type: "numerical"
     node_type: "input"
     actionability: "same-or-increase"
-    mutability: true
+    mutability: True
     parent: null
     parent_short: null
     encode: null # Numeric, no encoding needed
@@ -38,7 +38,7 @@ features:
     type: "numerical"
     node_type: "input"
     actionability: "same-or-increase"
-    mutability: true
+    mutability: True
     parent: null
     parent_short: null
     encode: null # Numeric, no encoding needed
@@ -50,7 +50,7 @@ features:
     type: "numerical"
     node_type: "input"
     actionability: "same-or-increase"
-    mutability: true
+    mutability: True
     parent: null
     parent_short: null
     encode: null # Numeric, no encoding needed
@@ -63,7 +63,7 @@ features:
     type: "categorical"
     node_type: "input"
     actionability: "any"
-    mutability: true
+    mutability: True
     parent: null
     parent_short: null
     encode: "one-hot"
@@ -75,7 +75,7 @@ features:
     type: "binary"
     node_type: "output"
     actionability: "none"
-    mutability: false
+    mutability: False
     parent: null
     parent_short: null
     encode: null

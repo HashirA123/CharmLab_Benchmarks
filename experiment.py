@@ -1,5 +1,5 @@
 """
-usage example: python -m experiment --config_path experiments/standard/experiment_config.yml
+usage example: python -m experiment --config_path experiments/simple_experiments/experiment_config.yml
 """
 import argparse
 import pandas as pd
@@ -18,6 +18,7 @@ import method.catalog.PROBE.method  # noqa: F401
 import method.catalog.RBR.method  # noqa: F401
 import method.catalog.LARR.method  # noqa: F401
 import method.catalog.WACHTER.method  # noqa: F401
+import method.catalog.GS.method  # noqa: F401
 import evaluation.catalog.distances  # noqa: F401
 import evaluation.catalog.validity  # noqa: F401
 
@@ -46,6 +47,7 @@ _METHOD_CONFIG_PATHS = {
     "RBR": "method/catalog/RBR/library/config.yml",
     "LARR": "method/catalog/LARR/library/config.yml",
     "WACHTER": "method/catalog/WACHTER/library/config.yml",
+    "GROWING_SPHERES": "method/catalog/GS/library/config.yml",
     # add more method types and their config paths here
 }
 

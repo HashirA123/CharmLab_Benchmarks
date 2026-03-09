@@ -89,7 +89,7 @@ class LARR(MethodObject):
         cat_features_indices = []
         for features in encoded_feature_names:
             indices = [factuals.columns.get_loc(feat) for feat in features]
-            cat_features_indices.extend(indices)
+            cat_features_indices.append(indices)
 
         coeffs = self._coeffs
         intercepts = self._intercepts

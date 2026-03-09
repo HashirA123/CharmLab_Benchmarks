@@ -55,10 +55,11 @@ class WACHTER(MethodObject):
         encoded_feature_names = self._data.get_categorical_features(expanded=True)
 
         cat_features_indices = []
+        # TODO: this logic of getting categorical feature indices is repeated across multiple methods, should be moved to a utility function in the data object or a shared utility file
         for features in encoded_feature_names:
             # Find the indices of these encoded features in the processed dataframe
             indices = [factuals.columns.get_loc(feat) for feat in features]
-            cat_features_indices.extend(indices)
+            cat_features_indices.append(indices)
 
         cfs = []
         for index, row in factuals.iterrows():

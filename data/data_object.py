@@ -3,7 +3,7 @@ from sklearn.discriminant_analysis import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, normalize
 import yaml
-from typing import Dict, Optional, Tuple, List, Any
+from typing import Dict, Optional, Tuple, List, Any, Union
 
 class DataObject:
     """
@@ -114,7 +114,7 @@ class DataObject:
         """
         return self._metadata
     
-    def get_categorical_features(self, expanded: bool = True) -> List[str]:
+    def get_categorical_features(self, expanded: bool = True) -> Union[List[str], List[List[str]]]:
         """
         Retrieves a list of categorical features based on the configuration.
 
@@ -123,17 +123,56 @@ class DataObject:
                 - If True, returns the expanded feature names after encoding (e.g., ['WorkClass_cat_0', 'WorkClass_cat_1']).
                 - If False, returns the original base feature names before encoding (e.g., ['WorkClass']).
         Returns:
-            List[str]: A list of feature names that are categorized as 'categorical' in the config.
+            Union[List[str], List[List[str]]]: A list of feature names that are categorized as 'categorical' in the config.
         """
+        # TODO: this should adapt and create this list even if its not explicitly defined in the config, by checking the "type" key of each feature in the config.
         categorical_features = []
         for feature in self._config['features']:
             if self._config['features'][feature]['type'] == 'categorical':
                 if expanded:
                     # Add all the expanded feature names that start with the base feature name
-                    categorical_features.append(self._config['features'][feature]['encoded_feature_names'])
+                    categorical_features.append(self._config['features'][feature]['encoded_feature_names']) # return a list of lists, inner list contains expanded feature names for a single categorical feature
                 else:
-                    categorical_features.append(feature)
+                    categorical_features.append(feature) # return a list of base feature names
         return categorical_features
+
+    def get_continuous_features(self) -> List[str]:
+        """
+        Retrieves a list of numerical features based on the configuration.
+
+        Returns:
+            List[str]: A list of feature names that are categorized as 'numerical' in the config
+        """
+        # TODO: also make this adapt and create the list incase the configs don't specify
+        continuous_features = []
+        for feature in self._config['features']:
+            if self._config['features'][feature]['type'] == 'numerical':
+                continuous_features.append(feature)
+        return continuous_features
+    
+    def get_mutable_features(self, mutable: bool = True) -> List[str]:
+        """
+        Retrieves a list of mutable or immutable features based on the configuration.
+
+        Args:
+            mutable (bool):
+                - If True, return the list of mutable features
+                - If False, return the list of immutable features
+        Returns:
+            List[str]: A list of feature names that are categorized as 'immutable' in the config
+        """
+        # TODO: this requires info from the config, if missing then raise error
+        mutable_features = []
+        for feature in self._config['features']:
+            if 'mutability' not in self._config['features'][feature]:
+                raise ValueError(f"Feature '{feature}' is missing the 'mutability' key in the configuration.")
+            if self._config['features'][feature]['mutability'] == mutable and self._config['features'][feature]['node_type'] == 'input': # only consider input features for mutability
+                if self._config['features'][feature]['type'] == 'categorical' and self._config['features'][feature]['encode'] is not None:
+                    # if the feature is categorical and has encoding, we need to add all the expanded feature names to the mutable features list
+                    mutable_features.extend(self._config['features'][feature]['encoded_feature_names'])
+                else:
+                    mutable_features.append(feature)
+        return mutable_features
 
     def _read_raw_data(self):
         """
