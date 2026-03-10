@@ -20,6 +20,7 @@ import method.catalog.LARR.method  # noqa: F401
 import method.catalog.WACHTER.method  # noqa: F401
 import method.catalog.GS.method  # noqa: F401
 import method.catalog.FACE.method  # noqa: F401
+import method.catalog.ClaPROAR.method  # noqa: F401
 import evaluation.catalog.distances  # noqa: F401
 import evaluation.catalog.validity  # noqa: F401
 
@@ -50,6 +51,7 @@ _METHOD_CONFIG_PATHS = {
     "WACHTER": "method/catalog/WACHTER/library/config.yml",
     "GROWING_SPHERES": "method/catalog/GS/library/config.yml",
     "FACE": "method/catalog/FACE/library/config.yml",
+    "ClaPROAR": "method/catalog/ClaPROAR/library/config.yml",
     # add more method types and their config paths here
 }
 

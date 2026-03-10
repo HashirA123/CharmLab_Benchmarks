@@ -1,0 +1,6 @@
+individual_cost_lambda: 0.1
+external_cost_lambda: 0.1
+learning_rate: 0.01
+max_iter: 100
+tol: 0.0001
+target_class: 1

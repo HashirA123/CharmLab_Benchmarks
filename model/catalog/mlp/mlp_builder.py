@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional, Dict, Union
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
+from sympy import false
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -271,7 +272,7 @@ class PyTorchNeuralNetwork(ModelObject, torch.nn.Module):
         regardless of the backend.
         """
         self.eval()  # Set the model to evaluation mode
-
+        is_tensor = False
         # ensure input is in tensor format for PyTorch models, and in the correct feature order as specified by the DataObject
         # should return a list of 1s or 0s.
         if isinstance(x, pd.DataFrame):
@@ -279,6 +280,7 @@ class PyTorchNeuralNetwork(ModelObject, torch.nn.Module):
             x_numeric = x[feature_names].to_numpy(dtype=np.float32) # reorder columns to match the expected feature order
             x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
         elif isinstance(x, torch.Tensor):
+            is_tensor = True
             x_tensor = x.to(self._device)
         else:
             x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
@@ -290,22 +292,30 @@ class PyTorchNeuralNetwork(ModelObject, torch.nn.Module):
         
         if self._config.get('output_activation') == 'sigmoid':
             # If sigmoid is used, convert predictions to binary (0 or 1)
-            return (predictions > 0.5).float().cpu().numpy().squeeze() # squeeze to convert from shape (n_samples, 1) to (n_samples,)
+            if is_tensor:
+                return (predictions > 0.5).float()
+            else:
+                return (predictions > 0.5).float().cpu().numpy().squeeze() # squeeze to convert from shape (n_samples, 1) to (n_samples,)
         elif self._config.get('output_activation') == 'softmax':
             # If softmax is used, return the class with the highest probability
-            return np.argmax(predictions.cpu().numpy(), axis=1)
+            if is_tensor:
+                return torch.argmax(predictions, dim=1)
+            else:
+                return np.argmax(predictions.cpu().numpy(), axis=1)
         
     def predict_both_classes(self, x: Union[np.ndarray, pd.DataFrame, torch.Tensor]) -> Union[np.ndarray, torch.Tensor]:
         """
         Returns the predicted classes for both classes, returns both classes in a numpy array.
         """
         self.eval()  # Set the model to evaluation mode
+        is_tensor = False
         # ensure input is in tensor format for PyTorch models, and in the correct feature order as specified by the DataObject
         if isinstance(x, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
             x_numeric = x[feature_names].to_numpy(dtype=np.float32) # reorder columns to match the expected feature order
             x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
         elif isinstance(x, torch.Tensor):
+            is_tensor = True
             x_tensor = x.to(self._device)
         else:
             x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
@@ -317,12 +327,18 @@ class PyTorchNeuralNetwork(ModelObject, torch.nn.Module):
         if self._config.get('output_activation') == 'sigmoid':
             # if sigmoid, we need to return both the labels for the classes, which is just the predicted label and its complement (1 - predicted label)
             predicted_labels = (predictions > 0.5).float().cpu().numpy().squeeze() # shape (n_samples,)
-            return np.vstack([1 - predicted_labels, predicted_labels]).T # shape (n_samples, 2) with columns [class_0, class_1]
+            if is_tensor:
+                return torch.stack([1 - predicted_labels, predicted_labels], dim=1) # shape (n_samples, 2) with columns [class_0, class_1]
+            else:
+                return np.vstack([1 - predicted_labels, predicted_labels]).T # shape (n_samples, 2) with columns [class_0, class_1]
         elif self._config.get('output_activation') == 'softmax':
             # If softmax is used, the output is already in the form of class probabilities, but we want predicted labels.
             # so we round the probabilities to get the predicted class labels, and then convert back to one-hot encoding format.
             predicted_labels = np.argmax(predictions.cpu().numpy(), axis=1)
-            return np.eye(predictions.shape[1])[predicted_labels] # convert to one-hot encoding format
+            if is_tensor:
+                return torch.eye(predictions.shape[1])[predicted_labels] 
+            else:
+                return np.eye(predictions.shape[1])[predicted_labels] # convert to one-hot encoding format
             
     def predict_proba(self, x: Union[np.ndarray, pd.DataFrame, torch.Tensor]) -> Union[np.ndarray, torch.Tensor]:
         """
@@ -334,12 +350,14 @@ class PyTorchNeuralNetwork(ModelObject, torch.nn.Module):
         to the underlying model.
         """
         self.eval()  # Set the model to evaluation mode
+        is_tensor = False
         # ensure input is in tensor format for PyTorch models, and in the correct feature order as specified by the DataObject
         if isinstance(x, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
             x_numeric = x[feature_names].to_numpy(dtype=np.float32) # reorder columns to match the expected feature order
             x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
         elif isinstance(x, torch.Tensor):
+            is_tensor = True
             x_tensor = x.to(self._device)
         else:
             x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
@@ -350,8 +368,14 @@ class PyTorchNeuralNetwork(ModelObject, torch.nn.Module):
 
         if self._config.get('output_activation') == 'sigmoid':
             # if sigmoid, we need to also return the probability of the negative class, which is just 1 - probability of the positive class
-            return np.hstack([1 - predictions.cpu().numpy(), predictions.cpu().numpy()]) # shape (n_samples, 2) with columns [prob_class_0, prob_class_1]
+            if is_tensor:
+                return torch.hstack([1 - predictions, predictions]) # shape (n_samples, 2) with columns [prob_class_0, prob_class_1]
+            else:
+                return np.hstack([1 - predictions.cpu().numpy(), predictions.cpu().numpy()]) # shape (n_samples, 2) with columns [prob_class_0, prob_class_1]
         elif self._config.get('output_activation') == 'softmax':
             # If softmax is used, the output is already in the form of class probabilities, so we can just return it directly.
-            return predictions.cpu().numpy()
+            if is_tensor:
+                return predictions
+            else:
+                return predictions.cpu().numpy()
 
