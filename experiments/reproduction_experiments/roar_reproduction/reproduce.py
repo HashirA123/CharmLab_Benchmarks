@@ -4,7 +4,7 @@ import logging
 
 from experiment_utils import load_yaml, resolve_layer_config, select_factuals, setup_logging
 from data.catalog.german.data import GermanData
-from model.catalog.mlp.mlp_builder import PyTorchNeuralNetwork
+from model.catalog.mlp.mlp import PyTorchNeuralNetwork
 from method.method_factory import create_method
 from evaluation.evaluation_factory import create_evaluations
 

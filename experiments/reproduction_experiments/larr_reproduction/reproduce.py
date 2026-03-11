@@ -8,7 +8,7 @@ import torch
 
 from experiment_utils import load_yaml, resolve_layer_config, select_factuals, setup_logging
 from data.catalog.german.data import GermanData
-from model.catalog.mlp.mlp_builder import PyTorchNeuralNetwork
+from model.catalog.mlp.mlp import PyTorchNeuralNetwork
 
 # Force registration of all methods and evaluations
 from  method.catalog.LARR.library.utils import LARRecourse, RecourseCost

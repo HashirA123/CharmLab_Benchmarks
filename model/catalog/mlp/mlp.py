@@ -3,7 +3,6 @@ from typing import Any, Dict, Optional, Dict, Union
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
-from sympy import false
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -178,38 +177,6 @@ class PyTorchNeuralNetwork(ModelObject, torch.nn.Module):
                 optimizer.step()
 
         return self
-
-    # def predict(self, test: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
-    #     """
-    #     Predicts using the trained neural network.
-
-    #     Parameters
-    #     -------
-    #     test (torch.Tensor or np.ndarray): Input tensor or array for prediction.
-
-    #     Returns
-    #     -------
-    #     torch.Tensor: Predicted output tensor.
-
-    #     Raises
-    #     -------
-    #     None.
-    #     """
-    #     self.eval()
-    #     #y_train_pred = []
-
-    #     if isinstance(test, np.ndarray):
-    #         test_tensor = torch.tensor(test, dtype=torch.float32).to(self.device)
-    #     else:
-    #         test_tensor = test.to(self.device)
-
-    #     with torch.no_grad():
-    #         output = self(test_tensor)
-
-    #         #y_train_pred.extend(output)
-
-    #     # y_train_pred = torch.stack(y_train_pred)
-    #     return output
     
     def get_train_accuracy(self) -> float:
         """

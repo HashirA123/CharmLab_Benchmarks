@@ -8,7 +8,7 @@ import logging
 
 from experiment_utils import load_yaml, resolve_layer_config, select_factuals, setup_logging
 from data.data_object import DataObject
-from model.catalog.mlp.mlp_builder import PyTorchNeuralNetwork
+from model.catalog.mlp.mlp import PyTorchNeuralNetwork
 from method.method_factory import create_method
 from evaluation.evaluation_factory import create_evaluations
 
@@ -21,6 +21,7 @@ import method.catalog.WACHTER.method  # noqa: F401
 import method.catalog.GS.method  # noqa: F401
 import method.catalog.FACE.method  # noqa: F401
 import method.catalog.ClaPROAR.method  # noqa: F401
+import method.catalog.REVISE.method # noqa: F401
 import evaluation.catalog.distances  # noqa: F401
 import evaluation.catalog.validity  # noqa: F401
 
@@ -39,7 +40,7 @@ _DATA_CONFIG_PATHS = {
 }
 
 _MODEL_CONFIG_PATHS = {
-    "mlp": "model/catalog/mlp/model_config_mlp.yml",
+    "mlp": "model/catalog/mlp/config.yml",
     # add more model types and their config paths here
 }
 
@@ -52,6 +53,7 @@ _METHOD_CONFIG_PATHS = {
     "GROWING_SPHERES": "method/catalog/GS/library/config.yml",
     "FACE": "method/catalog/FACE/library/config.yml",
     "ClaPROAR": "method/catalog/ClaPROAR/library/config.yml",
+    "REVISE": "method/catalog/REVISE/library/config.yml",
     # add more method types and their config paths here
 }
 

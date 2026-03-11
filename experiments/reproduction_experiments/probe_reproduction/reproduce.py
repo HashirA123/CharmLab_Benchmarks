@@ -7,7 +7,7 @@ from data.catalog.compas.data import CompasData
 from evaluation.evaluation_factory import create_evaluations
 from experiment_utils import load_yaml, resolve_layer_config, select_factuals, select_factuals, setup_logging
 from method.method_factory import create_method
-from model.catalog.mlp.mlp_builder import PyTorchNeuralNetwork
+from model.catalog.mlp.mlp import PyTorchNeuralNetwork
 
 # Force registration of all methods and evaluations
 import method.catalog.PROBE.method  # noqa: F401

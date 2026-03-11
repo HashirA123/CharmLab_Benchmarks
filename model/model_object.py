@@ -59,6 +59,36 @@ class ModelObject(ABC):
 
     def get_test_data(self):
         return self._x_test, self._y_test
+    
+    def get_mutable_mask(self) -> np.array:
+        """
+        Get mask of mutable features.
+
+        For example with mutable feature "income" and immutable features "age", the
+        mask would be [True, False] for feature_input_order ["income", "age"].
+
+        This mask can then be used to index data to only get the columns that are (im)mutable.
+
+        Returns
+        -------
+        mutable_mask: np.array(bool)
+        """
+        # get categorical features
+        categorical = self._data_object.get_categorical_features(expanded=True)
+        # get the binary encoded categorical features
+        encoded_categorical = categorical
+        # get the immutables, where the categorical features are in encoded format
+        immutable = [
+            encoded_categorical[categorical.index(i)] if i in categorical else i
+            for i in self._data_object.get_mutable_features(mutable=False)
+        ]
+        # find the index of the immutables in the feature input order
+        immutable = [self._data_object.get_feature_names(expanded=True).index(col) for col in immutable]
+        # make a mask
+        mutable_mask = np.ones(len(self._data_object.get_feature_names(expanded=True)), dtype=bool)
+        # set the immutables to False
+        mutable_mask[immutable] = False
+        return mutable_mask
 
     @abstractmethod
     def get_train_accuracy(self) -> float:
