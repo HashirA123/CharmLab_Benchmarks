@@ -1,0 +1,16 @@
+apply_trex: true
+batch_size: 1
+clamp: [0, 1]
+trex_p: 2
+num_classes: 2
+robust_class: 1
+cf_steps: 60
+cf_step_size: 0.02
+cf_confidence: 0.5
+tau: 0.75
+K: 1000
+sigma: 0.05
+trex_max_steps: 20
+trex_epsilon: 1.0
+trex_step_size: 0.01
+device: "cuda"  # or "cpu"
