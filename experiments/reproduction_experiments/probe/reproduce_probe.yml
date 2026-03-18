@@ -1,5 +1,5 @@
 experiment:
-  name: "compas_probe_mlp_experiment"
+  name: "compas_probe_reproduction"
   seed: 42
   num_factuals: 20  # how many negative-class samples to generate counterfactuals for
   factual_selection: "negative_class"  # Options: "negative_class", "all"

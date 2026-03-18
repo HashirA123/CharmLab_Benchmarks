@@ -1,0 +1,33 @@
+experiment:
+  name: "greedy_reproduction"
+  seed: 42
+  num_factuals: 5
+  factual_selection: "all"
+  logger: "info"
+
+data:
+  - name: "boston_housing"
+    overrides:
+
+model:
+  name: "linear"
+  overrides:
+
+method:
+  name: "GREEDY"
+  overrides:
+    lambda_param: 0.05
+    step_size: 0.05
+    max_iter: 100
+    locked_features: []
+    target_class: 1
+
+autoencoder:
+  epochs: 50
+  batch_size: 32
+  learning_rate: 0.001
+
+assertions:
+  l1_std_max: 0.1
+  realism_std_max: 0.1
+  min_valid_ratio: 0.5

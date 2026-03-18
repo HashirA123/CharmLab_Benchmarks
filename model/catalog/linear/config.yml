@@ -1,0 +1,12 @@
+architecture: "linear" # Options: linear, mlp, tree, forest
+backend: "pytorch"  # Options: pytorch, xgboost
+cache_dir: "./.model_cache"
+load_pretrained: false # Toggle to load cached weights instead of training
+
+epochs: 100
+batch_size: 1000 # use dataset size to train in full-batch mode
+learning_rate: 0.001
+n_output: 1
+optimizer: "adam" # Options: adam, sgd, rms
+loss_function: "BCE" # Fixed for logistic regression
+output_activation: "sigmoid" # Fixed for logistic regression

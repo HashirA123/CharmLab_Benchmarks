@@ -8,6 +8,7 @@ import logging
 
 from experiment_utils import load_yaml, resolve_layer_config, select_factuals, setup_logging
 from data.data_object import DataObject
+from model.catalog.linear.linear import PyTorchLinear
 from model.catalog.mlp.mlp import PyTorchNeuralNetwork
 from method.method_factory import create_method
 from evaluation.evaluation_factory import create_evaluations
@@ -49,6 +50,7 @@ _DATA_CONFIG_PATHS = {
 }
 
 _MODEL_CONFIG_PATHS = {
+    "linear": "model/catalog/linear/config.yml",
     "mlp": "model/catalog/mlp/config.yml",
     # add more model types and their config paths here
 }
@@ -124,6 +126,11 @@ def run_experiment(config_path: str):
         # I wont make use of a factory pattern, just use a simple loop and if statements.
         if model_section["name"] == "mlp":
             model_objects.append(PyTorchNeuralNetwork(
+                data_object=data_obj,
+                config_override=model_config_merged
+            ))
+        elif model_section["name"] == "linear":
+            model_objects.append(PyTorchLinear(
                 data_object=data_obj,
                 config_override=model_config_merged
             ))

@@ -1,0 +1,168 @@
+name: "boston_housing"
+target_column: "target (label)"
+train_split: 0.8
+balance_classes: false
+preprocessing_strategy: "standardize" # Options: normalize, standardize, min-max none
+cache_dir: "./.data_cache" # For caching
+
+feature_order: ["CRIM", "ZN", "INDUS", "CHAS", "NOX", "RM", "AGE", "DIS", "RAD", "TAX", "PTRATIO", "B", "LSTAT"]
+
+# NOTE: CHAS and RAD are categorical, but the our original implementation kept them as numerical.
+post_encoding_feat_order: ["CRIM", "ZN", "INDUS", "CHAS", "NOX", "RM", "AGE", "DIS", "RAD", "TAX", "PTRATIO", "B", "LSTAT"]
+
+features:
+  CRIM:
+    short_name: "x0"
+    type: "numerical"
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: [17, 90] # Optional: can be used for validation or scaling
+    
+  ZN:
+    short_name: "x1"
+    type: "numerical"
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    
+  INDUS:
+    short_name: "x2"
+    type: "numerical"
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: [18, 80] # Optional: can be used for validation or scaling
+
+  CHAS:
+    short_name: "x3"
+    type: "numerical" # TODO: may need to be changed in future to adhere to categorical nature of the feature
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names: null
+    impute: "mode"
+
+  NOX:
+    short_name: "x4"
+    type: "numerical"
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: null  # Optional: can be used
+  
+  RM:
+    short_name: "x5"
+    type: "numerical"
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: null  # Optional: can be used
+  
+  AGE:
+    short_name: "x6"
+    type: "numerical"
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: null  # Optional: can be used
+
+  DIS:
+    short_name: "x7"
+    type: "numerical"
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: null  # Optional: can be used
+
+  RAD:
+    short_name: "x8"
+    type: "numerical"
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: null  # Optional: can be used
+
+  TAX:
+    short_name: "x9"
+    type: "numerical"
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: null  # Optional: can be used
+
+  PTRATIO:
+    short_name: "x10"
+    type: "numerical"
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: null  # Optional: can be used
+
+  B:
+    short_name: "x11"
+    type: "numerical"
+    node_type: "input"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null # Numeric, no encoding needed
+    encoded_feature_names: null
+    impute: "median" # Handle missing values dynamically
+    domain: null  # Optional: can be used
+
+  target (label):
+    short_name: "y"
+    type: "binary"
+    node_type: "output"
+    mutability: False
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "drop"
+    domain: [0, 1]
+
+  # etc
