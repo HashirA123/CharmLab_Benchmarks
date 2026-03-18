@@ -29,6 +29,7 @@ import method.catalog.CLUE.method # noqa: F401
 import method.catalog.CRUDS.method # noqa: F401
 import method.catalog.FOCUS.method # noqa: F401
 import method.catalog.GREEDY.method # noqa: F401
+import method.catalog.DICE.method # noqa: F401
 import evaluation.catalog.distances  # noqa: F401
 import evaluation.catalog.validity  # noqa: F401
 
@@ -68,6 +69,7 @@ _METHOD_CONFIG_PATHS = {
     "CRUDS" : "method/catalog/CRUDS/library/config.yml",
     "FOCUS" : "method/catalog/FOCUS/library/config.yml",
     "GREEDY" : "method/catalog/GREEDY/library/config.yml",
+    "DICE" : "method/catalog/DICE/library/config.yml",
     # add more method types and their config paths here
 }
 
