@@ -110,4 +110,4 @@ def select_factuals(model: ModelObject, X_test: pd.DataFrame, config) -> pd.Data
     else:
         raise ValueError(f"Unknown factual selection method {factual_selection}")
     
-    return df
+    return df.reset_index(drop=True)

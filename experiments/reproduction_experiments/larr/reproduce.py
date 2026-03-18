@@ -71,7 +71,7 @@ def run_experiment(config_path: str):
     # ---------- Select factuals for counterfactual generation -----------
     X_test, _ = current_model.get_test_data()
     X_train, _ = current_model.get_train_data()
-    factuals = select_factuals(current_model, german_object, X_test, experiment)
+    factuals = select_factuals(current_model, X_test, experiment)
     factuals = factuals.astype(np.float32) # ensure factuals are in numeric format for the methods
     logger.info(f"Selected {len(factuals)} factual instances.")
 
@@ -80,7 +80,7 @@ def run_experiment(config_path: str):
 
     experiment2 = experiment.copy()
     experiment2["factual_selection"] = "all"
-    recourse_needed_X = select_factuals(current_model, german_object, X_train, experiment2)
+    recourse_needed_X = select_factuals(current_model, X_train, experiment2)
 
     larr_recourse.choose_lambda(
         recourse_needed_X=recourse_needed_X.values.astype(np.float32),
@@ -155,5 +155,5 @@ def run_experiment(config_path: str):
 
 if __name__ == "__main__":
 
-    run_experiment("experiments/reproduction_experiments/larr_reproduction/reproduce_larr.yml")
+    run_experiment("experiments/reproduction_experiments/larr/reproduce_larr.yml")
 

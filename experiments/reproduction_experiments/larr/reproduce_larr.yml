@@ -28,11 +28,6 @@ data:
 model:
   name: "mlp" # Options: "mlp", "logistic_regression", etc.
   overrides:
-    epochs: 100
-    learning_rate: 0.001
-    batch_size: 1000
-    hidden_layers: [[50, 100], [100, 200], [200]]
-    output_activation: "sigmoid"
 
 # ---------- Method Layer ----------
 # method:

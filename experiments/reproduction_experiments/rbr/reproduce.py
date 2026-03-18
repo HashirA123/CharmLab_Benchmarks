@@ -93,7 +93,7 @@ def run_experiment(config_path: str):
 
     # ---------- Select factuals for counterfactual generation -----------
     X_test, y_test = current_model.get_test_data()
-    factuals = select_factuals(current_model, german_current_object, X_test, experiment)
+    factuals = select_factuals(current_model, X_test, experiment)
     factuals = factuals.astype(np.float32) # ensure factuals are in numeric format for the methods
     logger.info(f"Selected {len(factuals)} factual instances.")
 
@@ -132,5 +132,5 @@ def run_experiment(config_path: str):
 
 if __name__ == "__main__":
 
-    run_experiment("experiments/reproduction_experiments/rbr_reproduction/reproduce_rbr.yml")
+    run_experiment("experiments/reproduction_experiments/rbr/reproduce_rbr.yml")
 
